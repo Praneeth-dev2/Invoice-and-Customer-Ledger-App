@@ -29,7 +29,7 @@ document.getElementById("itemForm").addEventListener("submit", function (e) {
   const description = document.getElementById("itemDescription").value;
   const quantity = parseFloat(document.getElementById("quantity").value);
   const mrp = parseFloat(document.getElementById("mrp").value);
-  const discount = parseFloat(document.getElementById("discount").value);
+  const discount = parseFloat(document.getElementById("discount").value) || 0;
 
   // Calculate net amount (percentage discount only)
   let netAmount = mrp - (mrp * discount) / 100;
@@ -57,8 +57,6 @@ document.getElementById("itemForm").addEventListener("submit", function (e) {
 
   // Reset form
   this.reset();
-  document.getElementById("quantity").value = 1;
-  document.getElementById("discount").value = 0;
 });
 
 // DEV: Add 20 test items for testing pagination
@@ -204,15 +202,27 @@ function updateTable() {
   tbody.innerHTML = items
     .map(
       (item) => `
-          <tr>
+          <tr id="row-${item.sno}" data-sno="${item.sno}">
               <td>${item.sno}</td>
               <td>${item.description}</td>
-              <td>${item.quantity}</td>
-              <td>₹${item.mrp}</td>
-              <td>₹${item.net}</td>
+              <td class="editable-cell" data-field="quantity">
+                  <span class="view-mode">${item.quantity}</span>
+                  <input type="number" class="edit-mode form-control form-control-sm" value="${item.quantity}" min="1" step="1" style="display:none;">
+              </td>
+              <td class="editable-cell" data-field="mrp">
+                  <span class="view-mode">₹${item.mrp}</span>
+                  <input type="number" class="edit-mode form-control form-control-sm" value="${item.mrp}" min="0" step="0.01" style="display:none;">
+              </td>
+              <td class="editable-cell" data-field="net">
+                  <span class="view-mode">₹${item.net}</span>
+                  <input type="number" class="edit-mode form-control form-control-sm" value="${item.net}" min="0" step="0.01" style="display:none;">
+              </td>
               <td>₹${item.total}</td>
               <td>
-                  <button class="btn btn-danger btn-sm" onclick="removeItem(${item.sno})">🗑️</button>
+                  <button class="btn btn-warning btn-sm edit-btn" onclick="editItem(${item.sno})" title="Edit">✏️</button>
+                  <button class="btn btn-success btn-sm save-btn" onclick="saveItem(${item.sno})" title="Save" style="display:none;">💾</button>
+                  <button class="btn btn-secondary btn-sm cancel-btn" onclick="cancelEdit(${item.sno})" title="Cancel" style="display:none;">✖️</button>
+                  <button class="btn btn-danger btn-sm delete-btn" onclick="removeItem(${item.sno})" title="Delete">🗑️</button>
               </td>
           </tr>
       `,
@@ -221,8 +231,102 @@ function updateTable() {
   updateButtonStates();
 }
 
+// Edit item - enable inline editing
+function editItem(sno) {
+  const row = document.getElementById(`row-${sno}`);
+  if (!row) return;
+
+  // Switch to edit mode
+  const viewSpans = row.querySelectorAll(".view-mode");
+  const editInputs = row.querySelectorAll(".edit-mode");
+  const editBtn = row.querySelector(".edit-btn");
+  const saveBtn = row.querySelector(".save-btn");
+  const cancelBtn = row.querySelector(".cancel-btn");
+  const deleteBtn = row.querySelector(".delete-btn");
+
+  viewSpans.forEach((span) => (span.style.display = "none"));
+  editInputs.forEach((input) => {
+    input.style.display = "block";
+    input.style.width = "80px";
+  });
+
+  editBtn.style.display = "none";
+  deleteBtn.style.display = "none";
+  saveBtn.style.display = "inline-block";
+  cancelBtn.style.display = "inline-block";
+}
+
+// Save item - save inline edits
+function saveItem(sno) {
+  const row = document.getElementById(`row-${sno}`);
+  if (!row) return;
+
+  const item = items.find((item) => item.sno === sno);
+  if (!item) return;
+
+  // Get new values from inputs
+  const inputs = row.querySelectorAll(".edit-mode");
+  const quantityInput = row.querySelector('[data-field="quantity"] .edit-mode');
+  const mrpInput = row.querySelector('[data-field="mrp"] .edit-mode');
+  const netInput = row.querySelector('[data-field="net"] .edit-mode');
+
+  const quantity = parseFloat(quantityInput.value);
+  const mrp = parseFloat(mrpInput.value);
+  const net = parseFloat(netInput.value);
+
+  // Validate inputs
+  if (isNaN(quantity) || quantity <= 0) {
+    alert("Invalid quantity!");
+    return;
+  }
+
+  if (isNaN(mrp) || mrp < 0) {
+    alert("Invalid MRP!");
+    return;
+  }
+
+  if (isNaN(net) || net < 0) {
+    alert("Invalid Net amount!");
+    return;
+  }
+
+  // Update item with new values
+  item.quantity = quantity;
+  item.mrp = mrp.toFixed(2);
+  item.net = net.toFixed(2);
+  item.total = (quantity * net).toFixed(2);
+
+  updateTable();
+  updateTotal();
+}
+
+// Cancel edit - revert to view mode
+function cancelEdit(sno) {
+  const row = document.getElementById(`row-${sno}`);
+  if (!row) return;
+
+  // Switch back to view mode without saving
+  const viewSpans = row.querySelectorAll(".view-mode");
+  const editInputs = row.querySelectorAll(".edit-mode");
+  const editBtn = row.querySelector(".edit-btn");
+  const saveBtn = row.querySelector(".save-btn");
+  const cancelBtn = row.querySelector(".cancel-btn");
+  const deleteBtn = row.querySelector(".delete-btn");
+
+  viewSpans.forEach((span) => (span.style.display = "inline"));
+  editInputs.forEach((input) => (input.style.display = "none"));
+
+  editBtn.style.display = "inline-block";
+  deleteBtn.style.display = "inline-block";
+  saveBtn.style.display = "none";
+  cancelBtn.style.display = "none";
+}
+
 // Remove item
 function removeItem(sno) {
+  if (!confirm("Are you sure you want to delete this item?")) {
+    return;
+  }
   items = items.filter((item) => item.sno !== sno);
   updateTable();
   updateTotal();
@@ -268,6 +372,9 @@ function generateInvoice() {
     return;
   }
 
+  // Recalculate total from all items' net values (in case of edits)
+  updateTotal();
+
   const { jsPDF } = window.jspdf;
   const doc = new jsPDF();
 
@@ -277,12 +384,21 @@ function generateInvoice() {
     1000000000 + Math.random() * 9000000000,
   ).toString();
 
-  // Format date and time
-  const date = now.toLocaleDateString("en-IN", {
-    day: "2-digit",
-    month: "2-digit",
-    year: "numeric",
-  });
+  // Format date as dd/mm/yyyy
+  const selectedDate = document.getElementById("invoiceDate").value;
+  let date;
+  if (selectedDate) {
+    const invoiceDate = new Date(selectedDate + "T00:00:00");
+    const day = String(invoiceDate.getDate()).padStart(2, "0");
+    const month = String(invoiceDate.getMonth() + 1).padStart(2, "0");
+    const year = invoiceDate.getFullYear();
+    date = `${day}/${month}/${year}`;
+  } else {
+    const day = String(now.getDate()).padStart(2, "0");
+    const month = String(now.getMonth() + 1).padStart(2, "0");
+    const year = now.getFullYear();
+    date = `${day}/${month}/${year}`;
+  }
   const time = now.toLocaleTimeString("en-IN", {
     hour: "2-digit",
     minute: "2-digit",
@@ -422,8 +538,7 @@ function generateInvoice() {
 
   // Note: Page border is added by didDrawPage callback in autoTable
 
-  // Get selected invoice date for filename
-  const selectedDate = document.getElementById("invoiceDate").value;
+  // Get selected invoice date for filename (reuse selectedDate from above)
   let fileDay, fileMonth, fileYear;
 
   if (selectedDate) {
@@ -535,8 +650,6 @@ function takeNewOrder() {
   updateButtonStates();
   // Reset form fields
   document.getElementById("itemForm").reset();
-  document.getElementById("quantity").value = 1;
-  document.getElementById("discount").value = 0;
   document.getElementById("customerName").value = "";
 
   // Reset invoice date to today
