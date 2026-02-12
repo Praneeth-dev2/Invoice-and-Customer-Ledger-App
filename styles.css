@@ -1,0 +1,695 @@
+body {
+  background-color: #f5ebe0;
+  padding: 20px 0;
+}
+.container {
+  max-width: 900px;
+  background: white;
+  padding: 30px;
+  border-radius: 10px;
+  box-shadow: 0 0 20px rgba(188, 108, 37, 0.2);
+}
+.header {
+  text-align: center;
+  margin-bottom: 30px;
+  padding-bottom: 20px;
+  border-bottom: 3px solid #bc6c25;
+}
+.header h1 {
+  color: #bc6c25;
+  font-weight: bold;
+}
+.item-form {
+  background: #f5ebe0;
+  padding: 20px;
+  border-radius: 8px;
+  margin-bottom: 20px;
+  border: 2px solid #dda15e;
+}
+.item-form .row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+.item-form .col-md-12 {
+  flex: 1 1 100%;
+  min-width: 0;
+}
+.item-form .col-md-4 {
+  flex: 1 1 30%;
+  min-width: 0;
+  max-width: 33%;
+}
+.item-form input.form-control {
+  width: 100%;
+  min-width: 0;
+}
+.item-form label {
+  font-size: 14px !important;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+.items-table {
+  margin-top: 30px;
+}
+.total-section {
+  background: linear-gradient(135deg, #dda15e, #bc6c25);
+  color: white;
+  padding: 15px;
+  border-radius: 8px;
+  margin-top: 20px;
+}
+.total-flex {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  width: 100%;
+}
+.total-label {
+  font-size: 2rem;
+  font-weight: bold;
+  margin-bottom: 0;
+}
+.total-amount {
+  font-size: 2rem;
+  font-weight: bold;
+  color: white;
+  margin-bottom: 0;
+}
+.btn-action {
+  margin: 5px;
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 10px;
+  white-space: nowrap;
+}
+
+.btn-action span {
+  white-space: normal;
+  word-break: break-word;
+  line-height: 1.2;
+}
+.btn-outline-danger.btn-sm {
+  background-color: #dc3545 !important;
+  color: #fff !important;
+  border-color: #dc3545 !important;
+}
+.btn-outline-danger.btn-sm:hover {
+  background-color: #b52a37 !important;
+  color: #fff !important;
+  border-color: #b52a37 !important;
+}
+.table-responsive {
+  font-size: 14px;
+  overflow-x: auto;
+}
+.table tbody {
+  background-color: #fefae0;
+}
+.table tbody tr:hover {
+  background-color: #dda15e;
+  color: white;
+}
+.action-buttons {
+  flex-direction: row;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 15px;
+  flex-wrap: wrap;
+}
+.action-buttons .btn {
+  flex: 1;
+  min-width: 200px;
+  font-size: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 14px;
+  padding: 8px 16px;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+.action-buttons,
+.item-form .row,
+.item-form .col-md-4,
+.item-form .col-md-12,
+.item-form input.form-control,
+.item-form label {
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+@media (max-width: 770px) {
+  .action-buttons {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 18px 18px;
+  }
+  .action-buttons .btn {
+    width: 100%;
+    height: 54px;
+    font-size: 1.1rem;
+    padding: 0 10px;
+    margin: 0;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+}
+@media (max-width: 440px) {
+  .action-buttons {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 10px;
+  }
+  .action-buttons .btn {
+    width: 100%;
+    height: 50px;
+    text-align: center;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+}
+@media (max-width: 576px) {
+  .total-label,
+  .total-amount {
+    font-size: 1.3rem;
+  }
+  .container {
+    padding: 15px;
+  }
+  .item-form {
+    padding: 15px;
+  }
+  .btn-action {
+    margin: 0;
+    padding: 8px 12px;
+    white-space: normal;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  .btn-action span {
+    white-space: normal;
+  }
+  .text-center.mt-4 {
+    margin-top: 10px !important;
+    margin-bottom: 0 !important;
+  }
+  .table-responsive {
+    font-size: 10px;
+  }
+  .table th,
+  .table td {
+    padding: 0.25rem;
+    white-space: nowrap;
+  }
+  .table th:first-child,
+  .table td:first-child {
+    min-width: 30px;
+  }
+  .table th:nth-child(2),
+  .table td:nth-child(2) {
+    min-width: 80px;
+    max-width: 100px;
+    white-space: normal;
+    word-break: break-word;
+  }
+  .table th:nth-child(3),
+  .table td:nth-child(3) {
+    min-width: 40px;
+  }
+  .table th:nth-child(4),
+  .table td:nth-child(4),
+  .table th:nth-child(5),
+  .table td:nth-child(5),
+  .table th:nth-child(6),
+  .table td:nth-child(6) {
+    min-width: 60px;
+  }
+  .table th:last-child,
+  .table td:last-child {
+    min-width: 50px;
+  }
+}
+.saved-invoices-section {
+  background: #fefae0;
+  padding: 20px;
+  border-radius: 8px;
+  margin-top: 30px;
+  border: 2px solid #dda15e;
+}
+.invoices-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 15px;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+.invoices-header h4 {
+  margin: 0;
+}
+.invoice-item {
+  background: white;
+  padding: 12px 15px;
+  margin: 5px 0;
+  border-radius: 5px;
+  border-left: 3px solid #bc6c25;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  transition: all 0.3s ease;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 15px;
+}
+.invoice-item:hover {
+  background: #f9f9f9;
+  transform: translateY(-1px);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
+}
+.invoice-filename {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+}
+.invoice-filename ion-icon {
+  font-size: 22px;
+  color: #bc6c25;
+  flex-shrink: 0;
+}
+.filename-text {
+  color: #333;
+  font-size: 14px;
+  font-weight: 500;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.search-box {
+  margin-bottom: 15px;
+}
+.download-options {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  justify-content: center;
+  align-items: center;
+}
+.download-options .btn {
+  transition: all 0.3s ease;
+}
+.date-range-picker {
+  background: white;
+  padding: 15px;
+  border-radius: 8px;
+  margin-bottom: 15px;
+  border: 2px solid #dda15e;
+  animation: slideDown 0.3s ease;
+}
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+.date-range-picker label {
+  font-size: 13px;
+  font-weight: 600;
+  color: #bc6c25;
+}
+.sort-controls {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+}
+.sort-controls label {
+  font-weight: bold;
+  color: #bc6c25;
+  margin: 0;
+  font-size: 14px;
+}
+.sort-icon-btn {
+  background: white;
+  border: 1px solid #dda15e;
+  border-radius: 5px;
+  padding: 5px 10px;
+  cursor: pointer;
+  color: #bc6c25;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  transition: all 0.3s ease;
+}
+.sort-icon-btn:hover {
+  background: #bc6c25;
+  color: white;
+  border-color: #bc6c25;
+}
+.sort-icon-btn ion-icon {
+  font-size: 20px;
+}
+.no-invoices {
+  text-align: center;
+  color: #6c757d;
+  padding: 30px;
+  font-style: italic;
+}
+.invoice-actions {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  flex-shrink: 0;
+}
+.invoice-actions .btn {
+  padding: 8px;
+  font-size: 20px;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+}
+.invoice-actions .btn:hover {
+  transform: scale(1.15);
+}
+.invoice-actions .btn-download {
+  color: #28a745;
+}
+.invoice-actions .btn-download:hover {
+  background: #d4edda;
+}
+.invoice-actions .btn-view {
+  color: #007bff;
+}
+.invoice-actions .btn-view:hover {
+  background: #cfe2ff;
+}
+.invoice-actions .btn-delete {
+  color: #dc3545;
+}
+.invoice-actions .btn-delete:hover {
+  background: #f8d7da;
+}
+
+/* Responsive: Move invoice action buttons to third line (horizontal) for very small screens */
+@media (max-width: 490px) {
+  .invoice-item {
+    flex-direction: column !important;
+    align-items: flex-start !important;
+    gap: 0 !important;
+  }
+  .invoice-filename {
+    width: 100%;
+    margin-bottom: 0 !important;
+  }
+  .invoice-actions {
+    width: 100%;
+    justify-content: flex-start !important;
+    margin-top: 0 !important;
+    padding-top: 0 !important;
+  }
+  .invoice-item > * {
+    margin-bottom: 0 !important;
+  }
+}
+
+/* Reduce invoice filename font size for very small screens */
+@media (max-width: 375px) {
+  .filename-text {
+    font-size: 11px !important;
+  }
+}
+
+/* Reduce item form text box headings (labels) font size for screens below 400px */
+@media (max-width: 400px) {
+  .item-form label {
+    font-size: 14px !important;
+  }
+}
+
+.pagination {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 10px;
+  margin-top: 15px;
+}
+.pagination button {
+  padding: 5px 12px;
+  border: 1px solid #bc6c25;
+  background: white;
+  color: #bc6c25;
+  border-radius: 5px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+.pagination button:hover:not(:disabled) {
+  background: #bc6c25;
+  color: white;
+}
+.pagination button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+.pagination span {
+  color: #bc6c25;
+  font-weight: bold;
+}
+@media (max-width: 360px) {
+  .pagination button {
+    font-size: 0;
+    padding: 5px 12px;
+    height: auto;
+  }
+  .pagination button::before {
+    font-size: 16px;
+  }
+  .pagination button:first-child::before {
+    content: "←";
+  }
+  .pagination button:last-child::before {
+    content: "→";
+  }
+}
+
+/* ==========================================
+   KHATA BOOK SPECIFIC STYLES
+   ========================================== */
+
+/* Tab Navigation */
+.tab-navigation {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 20px;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+.tab-btn {
+  flex: 1;
+  min-width: 150px;
+  padding: 12px 24px;
+  font-size: 16px;
+  font-weight: bold;
+  border: 2px solid #bc6c25;
+  background: white;
+  color: #bc6c25;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+.tab-btn:hover {
+  background: #f5ebe0;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(188, 108, 37, 0.2);
+}
+
+.tab-btn.active {
+  background: #bc6c25;
+  color: white;
+}
+
+@media (max-width: 440px) {
+  .tab-navigation {
+    flex-direction: column;
+  }
+  .tab-btn {
+    width: 100%;
+  }
+}
+
+/* Reports Section */
+.reports-section {
+  background: #fefae0;
+  padding: 20px;
+  border-radius: 8px;
+  margin-bottom: 20px;
+  border: 2px solid #dda15e;
+}
+
+.report-card {
+  background: white;
+  padding: 20px;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  transition: all 0.3s ease;
+}
+
+.report-card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+}
+
+.report-label {
+  font-size: 14px;
+  color: #6c757d;
+  margin-bottom: 8px;
+  font-weight: 500;
+}
+
+.report-value {
+  font-size: 28px;
+  font-weight: bold;
+}
+
+@media (max-width: 768px) {
+  .report-value {
+    font-size: 24px;
+  }
+}
+
+/* Modal Styling */
+.modal-content {
+  border-radius: 10px;
+  border: 2px solid #bc6c25;
+}
+
+.modal-header {
+  border-top-left-radius: 8px;
+  border-top-right-radius: 8px;
+}
+
+.modal-header .modal-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.modal-header ion-icon {
+  font-size: 24px;
+}
+
+/* Customer Detail View Adjustments */
+#customerDetailView .item-form {
+  margin-bottom: 20px;
+}
+
+/* Transaction Table Footer */
+#transactionTableFooter {
+  background-color: #fefae0;
+  font-weight: bold;
+}
+
+#transactionTableFooter td {
+  padding: 12px;
+  font-size: 14px;
+}
+
+/* Responsive Table Improvements for Khata Book */
+@media (max-width: 576px) {
+  .table th,
+  .table td {
+    font-size: 11px;
+  }
+
+  #transactionTableFooter td {
+    font-size: 11px;
+    padding: 8px;
+  }
+
+  .report-card {
+    padding: 15px;
+  }
+
+  .report-label {
+    font-size: 12px;
+  }
+
+  .report-value {
+    font-size: 20px;
+  }
+}
+
+/* Button Icon Alignment */
+.btn-action ion-icon {
+  font-size: 20px;
+}
+
+/* Balance Color Indicators */
+.text-danger {
+  color: #dc3545 !important;
+}
+
+.text-success {
+  color: #28a745 !important;
+}
+
+.text-warning {
+  color: #ffc107 !important;
+}
+
+/* Smooth Transitions */
+#customerListView,
+#customerDetailView {
+  animation: fadeIn 0.3s ease;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Add smooth transitions to all interactive elements */
+.btn,
+.btn-action,
+.tab-btn,
+.sort-icon-btn,
+.invoice-item,
+.report-card,
+.table tbody tr,
+input,
+select,
+textarea {
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Smooth hover effects */
+.btn:hover,
+.btn-action:hover,
+.tab-btn:hover,
+.invoice-item:hover,
+.report-card:hover {
+  transform: translateY(-2px);
+}
+
+.table tbody tr:hover {
+  transform: scale(1.01);
+}

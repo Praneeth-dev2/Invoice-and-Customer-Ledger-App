@@ -1,0 +1,330 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Invoice Generator</title>
+    <link
+      href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="styles.css" />
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.31/jspdf.plugin.autotable.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+  </head>
+  <body>
+    <div class="container">
+      <!-- Tab Navigation -->
+      <div class="tab-navigation">
+        <button
+          class="tab-btn active"
+          onclick="window.location.href = 'index.html'"
+        >
+          📄 Invoice
+        </button>
+        <button
+          class="tab-btn"
+          onclick="window.location.href = 'customerledger.html'"
+        >
+          📒 Customer Ledger
+        </button>
+      </div>
+
+      <div class="header">
+        <h1>📄 Invoice Generator</h1>
+        <p class="text-muted mb-0">Generate professional invoices instantly</p>
+      </div>
+
+      <!-- Customer Name Field -->
+      <div class="item-form mb-3">
+        <h4 class="mb-3">Customer Details</h4>
+        <div class="row">
+          <div class="col-md-8 mb-3">
+            <label for="customerName" class="form-label">Customer Name</label>
+            <input
+              type="text"
+              class="form-control"
+              id="customerName"
+              placeholder="Enter customer name"
+              required
+            />
+          </div>
+          <div class="col-md-4 mb-3">
+            <label for="invoiceDate" class="form-label">Invoice Date</label>
+            <input type="date" class="form-control" id="invoiceDate" required />
+          </div>
+        </div>
+      </div>
+
+      <!-- Item Entry Form -->
+      <div class="item-form">
+        <h4 class="mb-3">Add Item</h4>
+        <form id="itemForm">
+          <div class="row">
+            <div class="col-md-12 mb-3">
+              <label for="itemDescription" class="form-label"
+                >Item Description</label
+              >
+              <input
+                type="text"
+                class="form-control"
+                id="itemDescription"
+                required
+              />
+            </div>
+          </div>
+          <div class="row">
+            <div class="col-md-4 mb-3">
+              <label for="quantity" class="form-label">Quantity</label>
+              <input
+                type="number"
+                class="form-control"
+                id="quantity"
+                min="1"
+                value="1"
+                required
+              />
+            </div>
+            <div class="col-md-4 mb-3">
+              <label for="mrp" class="form-label">MRP (₹)</label>
+              <input
+                type="number"
+                class="form-control"
+                id="mrp"
+                min="0"
+                step="0.01"
+                required
+              />
+            </div>
+            <div class="col-md-4 mb-3">
+              <label for="discount" class="form-label">Discount (%)</label>
+              <input
+                type="number"
+                class="form-control"
+                id="discount"
+                min="0"
+                max="100"
+                step="0.01"
+                value="0"
+              />
+            </div>
+          </div>
+          <button
+            type="submit"
+            class="btn btn-action d-inline-flex align-items-center gap-2"
+            style="
+              background-color: #bc6c25;
+              border-color: #bc6c25;
+              color: white;
+            "
+          >
+            <ion-icon
+              name="add-circle-outline"
+              style="font-size: 20px"
+            ></ion-icon>
+            <span>Add Item</span>
+          </button>
+          <!-- ***DEVELOPMENT FEATURE*** -->
+          <!--
+          <button
+            type="button"
+            class="btn btn-warning btn-sm ms-2"
+            onclick="addTestItems()"
+            title="DEV: Add 20 test items"
+          >
+            🧪 Add 20 Rows (Test)
+          </button>
+          -->
+        </form>
+      </div>
+
+      <!-- Items Table -->
+      <div class="items-table">
+        <h4 class="mb-3">Invoice Items</h4>
+        <div class="table-responsive">
+          <table class="table table-bordered table-hover">
+            <thead style="background-color: #bc6c25; color: white">
+              <tr>
+                <th>S.No</th>
+                <th>Item Description</th>
+                <th>Quantity</th>
+                <th>MRP (₹)</th>
+                <th>Net (₹)</th>
+                <th>Total (₹)</th>
+                <th>Action</th>
+              </tr>
+            </thead>
+            <tbody id="itemsTableBody">
+              <tr>
+                <td colspan="7" class="text-center text-muted">
+                  No items added yet
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Total Section -->
+      <div class="total-section">
+        <div class="total-flex">
+          <span class="total-label">Total Bill Amount:</span>
+          <span class="total-amount"
+            >₹ <span id="totalBillAmount">0.00</span></span
+          >
+        </div>
+      </div>
+
+      <!-- Action Buttons -->
+      <div class="action-buttons mt-4">
+        <button
+          class="btn btn-lg btn-action"
+          id="generateBtn"
+          onclick="generateInvoice()"
+          style="background-color: #606c38; border-color: #606c38; color: white"
+        >
+          📄 Generate Invoice
+        </button>
+
+        <button
+          class="btn btn-lg btn-action"
+          onclick="downloadCurrentInvoice()"
+          style="background-color: #bc6c25; border-color: #bc6c25; color: white"
+          id="downloadBtn"
+          disabled
+        >
+          📥 Download PDF
+        </button>
+
+        <button
+          class="btn btn-action"
+          id="clearAllBtn"
+          onclick="clearAll()"
+          style="background-color: #dda15e; border-color: #dda15e; color: white"
+        >
+          🔄 Clear All
+        </button>
+
+        <button
+          class="btn btn-action d-flex justify-content-center align-items-center"
+          id="takeNewOrderBtn"
+          onclick="takeNewOrder()"
+          style="
+            background-color: #283618;
+            border-color: #283618;
+            color: white;
+            width: 100%;
+          "
+        >
+          <span
+            style="
+              display: flex;
+              align-items: center;
+              justify-content: center;
+              width: 100%;
+            "
+          >
+            🆕 <span style="margin-left: 8px">Take New Order</span>
+          </span>
+        </button>
+      </div>
+
+      <!-- Saved Invoices Section -->
+      <div class="saved-invoices-section">
+        <div class="invoices-header">
+          <h4>📋 Saved Invoices</h4>
+          <button
+            class="btn btn-sm"
+            onclick="toggleSortOrder()"
+            id="sortBtn"
+            style="
+              background-color: #bc6c25;
+              border-color: #bc6c25;
+              color: white;
+            "
+          >
+            <ion-icon name="swap-vertical-outline"></ion-icon>
+            <span id="sortText">Newest First</span>
+          </button>
+        </div>
+        <div class="search-box">
+          <input
+            type="text"
+            class="form-control"
+            id="invoiceSearch"
+            placeholder="Search by customer name, date, or filename..."
+            onkeyup="searchInvoices()"
+          />
+        </div>
+
+        <!-- Download Options -->
+        <div class="download-options mb-3">
+          <button
+            class="btn btn-success btn-sm me-2"
+            onclick="downloadAllInvoices()"
+            id="downloadAllBtn"
+          >
+            📦 Download All as ZIP
+          </button>
+          <button
+            class="btn btn-info btn-sm"
+            onclick="toggleDateRangePicker()"
+            id="dateRangeBtn"
+          >
+            📅 Download by Date Range
+          </button>
+        </div>
+
+        <!-- Date Range Picker (hidden by default) -->
+        <div
+          class="date-range-picker"
+          id="dateRangePicker"
+          style="display: none"
+        >
+          <div class="row g-2 align-items-end">
+            <div class="col-md-4">
+              <label for="startDate" class="form-label">Start Date</label>
+              <input type="date" class="form-control" id="startDate" />
+            </div>
+            <div class="col-md-4">
+              <label for="endDate" class="form-label">End Date</label>
+              <input type="date" class="form-control" id="endDate" />
+            </div>
+            <div class="col-md-4">
+              <button
+                class="btn btn-primary w-100"
+                onclick="downloadInvoicesByDateRange()"
+              >
+                📥 Download
+              </button>
+            </div>
+          </div>
+        </div>
+        <div id="savedInvoicesList">
+          <div class="no-invoices">
+            No saved invoices found. Generate your first invoice!
+          </div>
+        </div>
+        <div class="text-center mt-3">
+          <button
+            class="btn btn-outline-danger btn-sm"
+            onclick="clearAllInvoices()"
+          >
+            🗑️ Clear All Saved Invoices
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <script src="script.js"></script>
+    <script
+      type="module"
+      src="https://unpkg.com/ionicons@7.1.0/dist/ionicons/ionicons.esm.js"
+    ></script>
+    <script
+      nomodule
+      src="https://unpkg.com/ionicons@7.1.0/dist/ionicons/ionicons.js"
+    ></script>
+  </body>
+</html>
