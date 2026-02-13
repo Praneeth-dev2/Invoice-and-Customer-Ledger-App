@@ -385,6 +385,12 @@ body {
 .invoice-actions .btn-download:hover {
   background: #d4edda;
 }
+.invoice-actions .btn-edit {
+  color: #6c757d;
+}
+.invoice-actions .btn-edit:hover {
+  background: #e2e6ea;
+}
 .invoice-actions .btn-view {
   color: #007bff;
 }
@@ -399,7 +405,7 @@ body {
 }
 
 /* Responsive: Move invoice action buttons to third line (horizontal) for very small screens */
-@media (max-width: 490px) {
+@media (max-width: 510px) {
   .invoice-item {
     flex-direction: column !important;
     align-items: flex-start !important;

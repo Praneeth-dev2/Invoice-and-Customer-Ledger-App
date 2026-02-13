@@ -564,8 +564,9 @@ function generateInvoice() {
     invoiceNumber: invoiceNumber,
     customerName: customerName,
     filename: filename,
-    date: date, // Use the dd/mm/yyyy formatted date instead of toLocaleDateString
+    date: date, // Use the formatted date from the form, not the generation date
     time: now.toLocaleTimeString("en-IN"),
+    invoiceDate: selectedDate || now.toISOString().split("T")[0], // Save the form date in YYYY-MM-DD format
     totalAmount: totalAmount,
     itemCount: items.length,
     items: [...items], // Copy of items array
@@ -737,6 +738,11 @@ function displaySavedInvoices() {
         </div>
       </div>
       <div class="invoice-actions">
+        <button class="btn btn-edit" onclick="loadInvoiceForEditing(${
+          invoice.id
+        })" title="Load for Editing">
+          <ion-icon name="create-outline"></ion-icon>
+        </button>
         <button class="btn btn-download" onclick="downloadInvoice(${
           invoice.id
         })" title="Download Invoice">
@@ -826,6 +832,11 @@ function searchInvoices() {
         </div>
       </div>
       <div class="invoice-actions">
+        <button class="btn btn-edit" onclick="loadInvoiceForEditing(${
+          invoice.id
+        })" title="Load for Editing">
+          <ion-icon name="create-outline"></ion-icon>
+        </button>
         <button class="btn btn-download" onclick="downloadInvoice(${
           invoice.id
         })" title="Download Invoice">
@@ -921,6 +932,87 @@ function openInvoicePDF(invoiceId) {
     // Regenerate PDF for older invoices without pdfData
     regenerateAndOpenInvoice(invoiceId);
   }
+}
+
+// Load invoice data for editing
+function loadInvoiceForEditing(id) {
+  const invoice = savedInvoices.find((inv) => inv.id === id);
+  if (!invoice) {
+    alert("Invoice not found!");
+    return;
+  }
+
+  // Clear current items
+  items = [];
+  itemCounter = 1;
+
+  // Set customer name and date
+  document.getElementById("customerName").value = invoice.customerName || "";
+  // Use invoiceDate (YYYY-MM-DD format) if available, otherwise extract from filename
+  if (invoice.invoiceDate) {
+    document.getElementById("invoiceDate").value = invoice.invoiceDate;
+  } else {
+    // Fallback for old invoices: extract date from filename (format: Name_DD_MM_YYYY.pdf)
+    const filenameMatch = invoice.filename.match(
+      /_(\d{2})_(\d{2})_(\d{4})\.pdf$/,
+    );
+    if (filenameMatch) {
+      const [, day, month, year] = filenameMatch;
+      document.getElementById("invoiceDate").value = `${year}-${month}-${day}`;
+    } else if (invoice.date) {
+      // Last resort: try to parse the display date
+      const dateParts = invoice.date.split("/");
+      if (dateParts.length === 3) {
+        const [day, month, year] = dateParts;
+        document.getElementById("invoiceDate").value =
+          `${year}-${month.padStart(2, "0")}-${day.padStart(2, "0")}`;
+      }
+    }
+  }
+
+  // Load invoice items
+  if (invoice.items && Array.isArray(invoice.items)) {
+    invoice.items.forEach((item) => {
+      // Calculate MRP and net from the saved data
+      const mrp = parseFloat(item.mrp || 0);
+      const net = parseFloat(item.net || 0);
+      const quantity = parseFloat(item.quantity || 1);
+      const total = parseFloat(item.total || 0);
+
+      items.push({
+        sno: itemCounter++,
+        description: item.description,
+        quantity: quantity,
+        mrp: mrp.toFixed(2),
+        net: net.toFixed(2),
+        total: total.toFixed(2),
+      });
+    });
+  }
+
+  // Update the table and total
+  updateTable();
+  updateTotal();
+  updateButtonStates();
+
+  // Scroll to top to show the form
+  window.scrollTo({ top: 0, behavior: "smooth" });
+
+  // Get the loaded date value from the date picker and format as DD/MM/YYYY
+  const loadedDate = document.getElementById("invoiceDate").value;
+  let formattedDate = "N/A";
+  if (loadedDate) {
+    const dateObj = new Date(loadedDate + "T00:00:00");
+    const day = String(dateObj.getDate()).padStart(2, "0");
+    const month = String(dateObj.getMonth() + 1).padStart(2, "0");
+    const year = dateObj.getFullYear();
+    formattedDate = `${day}/${month}/${year}`;
+  }
+
+  // Show a confirmation message
+  alert(
+    `Invoice loaded for editing!\n\nCustomer: ${invoice.customerName || "N/A"}\nDate: ${formattedDate}\nItems: ${items.length}\n\nYou can now modify the details and save it as a new invoice.`,
+  );
 }
 
 // Download invoice from saved list
