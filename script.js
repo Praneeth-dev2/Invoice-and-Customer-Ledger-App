@@ -564,7 +564,7 @@ function generateInvoice() {
     invoiceNumber: invoiceNumber,
     customerName: customerName,
     filename: filename,
-    date: now.toLocaleDateString("en-IN"),
+    date: date, // Use the dd/mm/yyyy formatted date instead of toLocaleDateString
     time: now.toLocaleTimeString("en-IN"),
     totalAmount: totalAmount,
     itemCount: items.length,
