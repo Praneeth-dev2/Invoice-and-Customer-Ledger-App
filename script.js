@@ -431,7 +431,7 @@ function generateInvoice() {
   // Table data
   const tableData = items.map((item) => [
     item.sno,
-    item.description,
+    item.description.toUpperCase(),
     item.quantity,
     "Rs. " + item.mrp,
     "Rs. " + item.net,
@@ -912,8 +912,18 @@ function openInvoicePDF(invoiceId) {
   }
 
   if (invoice.pdfData) {
-    // Open existing PDF data
-    const newWindow = window.open();
+    // Convert data URI to blob for better mobile support
+    const base64 = invoice.pdfData.split(',')[1];
+    const binary = atob(base64);
+    const array = new Uint8Array(binary.length);
+    for (let i = 0; i < binary.length; i++) {
+      array[i] = binary.charCodeAt(i);
+    }
+    const blob = new Blob([array], { type: 'application/pdf' });
+    const blobUrl = URL.createObjectURL(blob);
+    
+    // Open in new tab with filename in title
+    const newWindow = window.open('', '_blank');
     newWindow.document.write(`
       <html>
         <head>
@@ -924,10 +934,14 @@ function openInvoicePDF(invoiceId) {
           </style>
         </head>
         <body>
-          <iframe src="${invoice.pdfData}"></iframe>
+          <iframe src="${blobUrl}"></iframe>
         </body>
       </html>
     `);
+    newWindow.document.close();
+    
+    // Clean up blob URL after a delay
+    setTimeout(() => URL.revokeObjectURL(blobUrl), 1000);
   } else {
     // Regenerate PDF for older invoices without pdfData
     regenerateAndOpenInvoice(invoiceId);
@@ -1086,7 +1100,7 @@ function regenerateAndOpenInvoice(invoiceId) {
 
   const tableData = invoice.items.map((item) => [
     item.sno,
-    item.description,
+    item.description.toUpperCase(),
     item.quantity,
     "Rs. " + item.mrp,
     "Rs. " + item.net,
@@ -1263,7 +1277,7 @@ function regenerateInvoice(invoiceId) {
 
   const tableData = items.map((item) => [
     item.sno,
-    item.description,
+    item.description.toUpperCase(),
     item.quantity,
     "Rs. " + item.mrp,
     "Rs. " + item.net,
