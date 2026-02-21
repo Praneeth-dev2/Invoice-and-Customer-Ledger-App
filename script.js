@@ -26,7 +26,7 @@ window.addEventListener("load", function () {
 document.getElementById("itemForm").addEventListener("submit", function (e) {
   e.preventDefault();
 
-  const description = document.getElementById("itemDescription").value;
+  const description = document.getElementById("itemDescription").value.toUpperCase();
   const quantity = parseFloat(document.getElementById("quantity").value);
   const mrp = parseFloat(document.getElementById("mrp").value);
   const discount = parseFloat(document.getElementById("discount").value) || 0;
@@ -46,6 +46,7 @@ document.getElementById("itemForm").addEventListener("submit", function (e) {
     description: description,
     quantity: quantity,
     mrp: mrp.toFixed(2),
+    discount: discount, // Store discount value
     net: netAmount.toFixed(2),
     total: total.toFixed(2),
   };
@@ -57,6 +58,22 @@ document.getElementById("itemForm").addEventListener("submit", function (e) {
 
   // Reset form
   this.reset();
+});
+
+// Convert item description to uppercase as user types
+document.getElementById("itemDescription").addEventListener("input", function (e) {
+  const start = this.selectionStart;
+  const end = this.selectionEnd;
+  this.value = this.value.toUpperCase();
+  this.setSelectionRange(start, end);
+});
+
+// Convert customer name to uppercase as user types
+document.getElementById("customerName").addEventListener("input", function (e) {
+  const start = this.selectionStart;
+  const end = this.selectionEnd;
+  this.value = this.value.toUpperCase();
+  this.setSelectionRange(start, end);
 });
 
 // DEV: Add 20 test items for testing pagination
@@ -132,10 +149,11 @@ function createPDFTableWithPagination(
       halign: "center",
     },
     styles: {
-      fontSize: 9,
+      fontSize: 10,
       font: "helvetica",
       fontStyle: "normal",
       cellPadding: 3,
+      textColor: [50, 50, 50],
     },
     columnStyles: {
       0: { cellWidth: 16, halign: "center" },
@@ -168,8 +186,8 @@ function createPDFTableWithPagination(
 
         // Invoice info - Customer Name (left), Date (right)
         doc.setFont("helvetica", "normal");
-        doc.setFontSize(9);
-        doc.setTextColor(100, 100, 100);
+        doc.setFontSize(10);
+        doc.setTextColor(50, 50, 50);
         doc.text(`Customer Name: ${customerName}`, 15, 32);
         doc.text(`Date: ${invoiceDate}`, 195, 32, { align: "right" });
       }
@@ -194,7 +212,7 @@ function updateTable() {
 
   if (items.length === 0) {
     tbody.innerHTML =
-      '<tr><td colspan="7" class="text-center text-muted">No items added yet</td></tr>';
+      '<tr><td colspan="8" class="text-center text-muted">No items added yet</td></tr>';
     updateButtonStates();
     return;
   }
@@ -204,7 +222,10 @@ function updateTable() {
       (item) => `
           <tr id="row-${item.sno}" data-sno="${item.sno}">
               <td>${item.sno}</td>
-              <td>${item.description}</td>
+              <td class="editable-cell" data-field="description">
+                  <span class="view-mode">${item.description}</span>
+                  <input type="text" class="edit-mode form-control form-control-sm" value="${item.description}" style="display:none;">
+              </td>
               <td class="editable-cell" data-field="quantity">
                   <span class="view-mode">${item.quantity}</span>
                   <input type="number" class="edit-mode form-control form-control-sm" value="${item.quantity}" min="1" step="1" style="display:none;">
@@ -213,9 +234,12 @@ function updateTable() {
                   <span class="view-mode">₹${item.mrp}</span>
                   <input type="number" class="edit-mode form-control form-control-sm" value="${item.mrp}" min="0" step="0.01" style="display:none;">
               </td>
+              <td class="discount-column editable-cell" data-field="discount" style="display:none;">
+                  <input type="number" class="edit-mode form-control form-control-sm" value="${item.discount !== undefined ? item.discount : 0}" min="0" max="100" step="0.01">
+              </td>
               <td class="editable-cell" data-field="net">
                   <span class="view-mode">₹${item.net}</span>
-                  <input type="number" class="edit-mode form-control form-control-sm" value="${item.net}" min="0" step="0.01" style="display:none;">
+                  <input type="number" class="edit-mode form-control form-control-sm" value="${item.net}" min="0" step="0.01" style="display:none;" readonly>
               </td>
               <td>₹${item.total}</td>
               <td>
@@ -236,6 +260,14 @@ function editItem(sno) {
   const row = document.getElementById(`row-${sno}`);
   if (!row) return;
 
+  // Show discount column header
+  const discountHeader = document.querySelector(".discount-column-header");
+  if (discountHeader) discountHeader.style.display = "";
+
+  // Show discount column in ALL rows to maintain alignment
+  const allDiscountCells = document.querySelectorAll(".discount-column");
+  allDiscountCells.forEach(cell => cell.style.display = "");
+
   // Switch to edit mode
   const viewSpans = row.querySelectorAll(".view-mode");
   const editInputs = row.querySelectorAll(".edit-mode");
@@ -247,13 +279,81 @@ function editItem(sno) {
   viewSpans.forEach((span) => (span.style.display = "none"));
   editInputs.forEach((input) => {
     input.style.display = "block";
-    input.style.width = "80px";
+    // Give description input more width, others get 80px
+    const cell = input.closest('.editable-cell');
+    if (cell && cell.dataset.field === 'description') {
+      input.style.width = "200px";
+    } else {
+      input.style.width = "80px";
+    }
   });
 
   editBtn.style.display = "none";
   deleteBtn.style.display = "none";
   saveBtn.style.display = "inline-block";
   cancelBtn.style.display = "inline-block";
+  
+  // Ensure buttons stay horizontal (not vertically stacked)
+  const actionsCell = row.querySelector('td:last-child');
+  if (actionsCell) {
+    actionsCell.style.whiteSpace = "nowrap";
+  }
+
+  // Get input elements
+  const mrpInput = row.querySelector('[data-field="mrp"] .edit-mode');
+  const discountInput = row.querySelector('[data-field="discount"] .edit-mode');
+  const netInput = row.querySelector('[data-field="net"] .edit-mode');
+  const quantityInput = row.querySelector('[data-field="quantity"] .edit-mode');
+
+  // Remove any existing event listeners by cloning
+  const newMrpInput = mrpInput.cloneNode(true);
+  const newDiscountInput = discountInput.cloneNode(true);
+  const newNetInput = netInput.cloneNode(true);
+  const newQuantityInput = quantityInput.cloneNode(true);
+  
+  // Ensure they're visible and styled
+  newMrpInput.style.display = "block";
+  newMrpInput.style.width = "80px";
+  newDiscountInput.style.display = "block";
+  newDiscountInput.style.width = "80px";
+  newNetInput.style.display = "block";
+  newNetInput.style.width = "80px";
+  newNetInput.readOnly = true; // Make net read-only as it's auto-calculated
+  newNetInput.style.backgroundColor = "#f0f0f0"; // Visual indicator that it's read-only
+  newQuantityInput.style.display = "block";
+  newQuantityInput.style.width = "80px";
+  
+  mrpInput.replaceWith(newMrpInput);
+  discountInput.replaceWith(newDiscountInput);
+  netInput.replaceWith(newNetInput);
+  quantityInput.replaceWith(newQuantityInput);
+
+  // Function to recalculate net based on MRP and discount
+  const recalculateNet = () => {
+    const mrp = parseFloat(newMrpInput.value) || 0;
+    const discount = parseFloat(newDiscountInput.value) || 0;
+    const net = mrp - (mrp * discount / 100);
+    newNetInput.value = net.toFixed(2);
+    recalculateTotal();
+  };
+
+  // Function to recalculate total based on quantity and net
+  const recalculateTotal = () => {
+    const quantity = parseFloat(newQuantityInput.value) || 0;
+    const net = parseFloat(newNetInput.value) || 0;
+    const total = quantity * net;
+    // Update the total cell directly
+    const totalCell = row.querySelector('td:nth-last-child(2)');
+    if (totalCell) totalCell.textContent = '₹' + total.toFixed(2);
+  };
+
+  // Add event listeners to the new elements
+  newMrpInput.addEventListener('input', recalculateNet);
+  newDiscountInput.addEventListener('input', recalculateNet);
+  newQuantityInput.addEventListener('input', recalculateTotal);
+
+  // Trigger initial calculation to ensure correct values are displayed
+  recalculateNet();
 }
 
 // Save item - save inline edits
@@ -265,16 +365,24 @@ function saveItem(sno) {
   if (!item) return;
 
   // Get new values from inputs
-  const inputs = row.querySelectorAll(".edit-mode");
+  const descriptionInput = row.querySelector('[data-field="description"] .edit-mode');
   const quantityInput = row.querySelector('[data-field="quantity"] .edit-mode');
   const mrpInput = row.querySelector('[data-field="mrp"] .edit-mode');
+  const discountInput = row.querySelector('[data-field="discount"] .edit-mode');
   const netInput = row.querySelector('[data-field="net"] .edit-mode');
 
+  const description = descriptionInput.value.trim().toUpperCase();
   const quantity = parseFloat(quantityInput.value);
   const mrp = parseFloat(mrpInput.value);
+  const discount = parseFloat(discountInput.value) || 0;
   const net = parseFloat(netInput.value);
 
   // Validate inputs
+  if (!description) {
+    alert("Item description cannot be empty!");
+    return;
+  }
+
   if (isNaN(quantity) || quantity <= 0) {
     alert("Invalid quantity!");
     return;
@@ -285,16 +393,30 @@ function saveItem(sno) {
     return;
   }
 
+  if (discount < 0 || discount > 100) {
+    alert("Discount must be between 0 and 100!");
+    return;
+  }
+
   if (isNaN(net) || net < 0) {
     alert("Invalid Net amount!");
     return;
   }
 
   // Update item with new values
+  item.description = description;
   item.quantity = quantity;
   item.mrp = mrp.toFixed(2);
+  item.discount = discount;
   item.net = net.toFixed(2);
   item.total = (quantity * net).toFixed(2);
+
+  // Hide discount column header and all discount cells
+  const discountHeader = document.querySelector(".discount-column-header");
+  if (discountHeader) discountHeader.style.display = "none";
+  
+  const allDiscountCells = document.querySelectorAll(".discount-column");
+  allDiscountCells.forEach(cell => cell.style.display = "none");
 
   updateTable();
   updateTotal();
@@ -304,6 +426,13 @@ function saveItem(sno) {
 function cancelEdit(sno) {
   const row = document.getElementById(`row-${sno}`);
   if (!row) return;
+
+  // Hide discount column header and all discount cells
+  const discountHeader = document.querySelector(".discount-column-header");
+  if (discountHeader) discountHeader.style.display = "none";
+  
+  const allDiscountCells = document.querySelectorAll(".discount-column");
+  allDiscountCells.forEach(cell => cell.style.display = "none");
 
   // Switch back to view mode without saving
   const viewSpans = row.querySelectorAll(".view-mode");
@@ -320,6 +449,9 @@ function cancelEdit(sno) {
   deleteBtn.style.display = "inline-block";
   saveBtn.style.display = "none";
   cancelBtn.style.display = "none";
+
+  // Re-render the table to restore original values
+  updateTable();
 }
 
 // Remove item
@@ -366,7 +498,7 @@ function generateInvoice() {
   }
 
   // Get customer name
-  const customerName = document.getElementById("customerName").value.trim();
+  const customerName = document.getElementById("customerName").value.trim().toUpperCase();
   if (!customerName) {
     alert("Please enter customer name!");
     return;
@@ -419,8 +551,8 @@ function generateInvoice() {
 
   // Invoice Info Section - Single line: Customer Name (left), Date (right)
   doc.setFont("helvetica", "normal");
-  doc.setFontSize(9);
-  doc.setTextColor(100, 100, 100);
+  doc.setFontSize(10);
+  doc.setTextColor(50, 50, 50);
 
   // Left: Customer Name
   doc.text(`Customer Name: ${customerName}`, 15, 32);
@@ -453,10 +585,11 @@ function generateInvoice() {
       halign: "center",
     },
     styles: {
-      fontSize: 9,
+      fontSize: 10,
       font: "helvetica",
       fontStyle: "normal",
       cellPadding: 3,
+      textColor: [50, 50, 50],
     },
     columnStyles: {
       0: { cellWidth: 16, halign: "center" },
@@ -489,8 +622,8 @@ function generateInvoice() {
 
         // Add invoice info on continued pages - Customer Name (left), Date (right)
         doc.setFont("helvetica", "normal");
-        doc.setFontSize(9);
-        doc.setTextColor(100, 100, 100);
+        doc.setFontSize(10);
+        doc.setTextColor(50, 50, 50);
         doc.text(`Customer Name: ${customerName}`, 15, 32);
         doc.text(`Date: ${date}`, 195, 32, { align: "right" });
       }
@@ -566,6 +699,7 @@ function generateInvoice() {
     filename: filename,
     date: date, // Use the formatted date from the form, not the generation date
     time: now.toLocaleTimeString("en-IN"),
+    generatedAt: now.toLocaleString("en-IN", { dateStyle: "short", timeStyle: "medium" }), // Current date and time when generated
     invoiceDate: selectedDate || now.toISOString().split("T")[0], // Save the form date in YYYY-MM-DD format
     totalAmount: totalAmount,
     itemCount: items.length,
@@ -706,6 +840,14 @@ function toggleSortOrder() {
   displaySavedInvoices();
 }
 
+// Helper function to convert text to title case (capitalize first letter of each word)
+function toTitleCase(text) {
+  if (!text) return text;
+  return text.toLowerCase().split(' ').map(word => 
+    word.charAt(0).toUpperCase() + word.slice(1)
+  ).join(' ');
+}
+
 // Display saved invoices
 function displaySavedInvoices() {
   const container = document.getElementById("savedInvoicesList");
@@ -727,17 +869,17 @@ function displaySavedInvoices() {
       (invoice) => `
     <div class="invoice-item" data-search="${invoice.filename} ${
       invoice.invoiceNumber || ""
-    } ${invoice.customerName || ""} ${invoice.date} ${invoice.totalAmount}">
+    } ${invoice.customerName || ""} ${invoice.date} ${invoice.totalAmount}" onclick="openInvoicePDF(${invoice.id})" style="cursor: pointer;">
       <div class="invoice-filename">
         <ion-icon name="document-text-outline"></ion-icon>
         <div>
           <span class="filename-text" title="${invoice.filename}">${
             invoice.filename
           }</span>
-          <div style="font-size: 11px; color: #6c757d; margin-top: 2px;">${invoice.customerName ? invoice.customerName + " | " : ""}${invoice.date} ${invoice.time}</div>
+          <div style="font-size: 11px; color: #6c757d; margin-top: 2px;">${invoice.customerName ? toTitleCase(invoice.customerName) + " | " : ""} ${invoice.generatedAt || (invoice.date + " " + invoice.time)}</div>
         </div>
       </div>
-      <div class="invoice-actions">
+      <div class="invoice-actions" onclick="event.stopPropagation()">
         <button class="btn btn-edit" onclick="loadInvoiceForEditing(${
           invoice.id
         })" title="Load for Editing">
@@ -821,17 +963,17 @@ function searchInvoices() {
       (invoice) => `
     <div class="invoice-item" data-search="${invoice.filename} ${
       invoice.invoiceNumber || ""
-    } ${invoice.customerName || ""} ${invoice.date} ${invoice.totalAmount}">
+    } ${invoice.customerName || ""} ${invoice.date} ${invoice.totalAmount}" onclick="openInvoicePDF(${invoice.id})" style="cursor: pointer;">
       <div class="invoice-filename">
         <ion-icon name="document-text-outline"></ion-icon>
         <div>
           <span class="filename-text" title="${invoice.filename}">${
             invoice.filename
           }</span>
-          <div style="font-size: 11px; color: #6c757d; margin-top: 2px;">${invoice.customerName ? invoice.customerName + " | " : ""}${invoice.date} ${invoice.time}</div>
+          <div style="font-size: 11px; color: #6c757d; margin-top: 2px;">${invoice.customerName ? toTitleCase(invoice.customerName) + " | " : ""} ${invoice.generatedAt || (invoice.date + " " + invoice.time)}</div>
         </div>
       </div>
-      <div class="invoice-actions">
+      <div class="invoice-actions" onclick="event.stopPropagation()">
         <button class="btn btn-edit" onclick="loadInvoiceForEditing(${
           invoice.id
         })" title="Load for Editing">
@@ -870,7 +1012,8 @@ function viewInvoiceDetails(invoiceId) {
   let detailsHtml = `
     <strong>Invoice Details:</strong><br>
     <strong>Filename:</strong> ${invoice.filename}<br>
-    <strong>Date:</strong> ${invoice.date} at ${invoice.time}<br>
+    <strong>Invoice Date:</strong> ${invoice.date}<br>
+    <strong>Generated At:</strong> ${invoice.generatedAt || (invoice.date + " at " + invoice.time)}<br>
     <strong>Total Amount:</strong> ₹${invoice.totalAmount}<br>
     <strong>Items:</strong><br><br>
   `;
@@ -956,9 +1099,11 @@ function loadInvoiceForEditing(id) {
     return;
   }
 
-  // Clear current items
+  // Clear current items and reset PDF state
   items = [];
   itemCounter = 1;
+  currentInvoicePDF = null;
+  currentInvoiceData = null;
 
   // Set customer name and date
   document.getElementById("customerName").value = invoice.customerName || "";
@@ -992,12 +1137,14 @@ function loadInvoiceForEditing(id) {
       const net = parseFloat(item.net || 0);
       const quantity = parseFloat(item.quantity || 1);
       const total = parseFloat(item.total || 0);
+      const discount = parseFloat(item.discount !== undefined ? item.discount : 0);
 
       items.push({
         sno: itemCounter++,
         description: item.description,
         quantity: quantity,
         mrp: mrp.toFixed(2),
+        discount: discount,
         net: net.toFixed(2),
         total: total.toFixed(2),
       });
@@ -1073,8 +1220,8 @@ function regenerateAndOpenInvoice(invoiceId) {
 
   // Invoice Info Section - Three columns: Estimate No (left), Name (center), Date (right)
   doc.setFont("helvetica", "bold");
-  doc.setFontSize(9);
-  doc.setTextColor(100, 100, 100);
+  doc.setFontSize(10);
+  doc.setTextColor(50, 50, 50);
 
   // Left: Estimate No
   doc.text("Estimate No:", 18, 32);
@@ -1084,7 +1231,7 @@ function regenerateAndOpenInvoice(invoiceId) {
 
   // Center: Customer Name
   doc.setFont("helvetica", "bold");
-  doc.setTextColor(100, 100, 100);
+  doc.setTextColor(50, 50, 50);
   doc.text("Customer Name:", 105, 32, { align: "center" });
   doc.setFont("helvetica", "normal");
   doc.setTextColor(0, 0, 0);
@@ -1092,7 +1239,7 @@ function regenerateAndOpenInvoice(invoiceId) {
 
   // Right: Date
   doc.setFont("helvetica", "bold");
-  doc.setTextColor(100, 100, 100);
+  doc.setTextColor(50, 50, 50);
   doc.text("Date:", 192, 32, { align: "right" });
   doc.setFont("helvetica", "normal");
   doc.setTextColor(0, 0, 0);
@@ -1121,10 +1268,11 @@ function regenerateAndOpenInvoice(invoiceId) {
       halign: "center",
     },
     styles: {
-      fontSize: 9,
+      fontSize: 10,
       font: "helvetica",
       fontStyle: "normal",
       cellPadding: 3,
+      textColor: [50, 50, 50],
     },
     columnStyles: {
       0: { cellWidth: 16, halign: "center" },
@@ -1157,8 +1305,8 @@ function regenerateAndOpenInvoice(invoiceId) {
 
         // Add invoice info on continued pages - Customer Name (left), Date (right)
         doc.setFont("helvetica", "normal");
-        doc.setFontSize(9);
-        doc.setTextColor(100, 100, 100);
+        doc.setFontSize(10);
+        doc.setTextColor(50, 50, 50);
         doc.text(`Customer Name: ${invoice.customerName || "N/A"}`, 15, 32);
         doc.text(`Date: ${invoice.date}`, 195, 32, { align: "right" });
       }
@@ -1250,8 +1398,8 @@ function regenerateInvoice(invoiceId) {
 
   // Invoice Info Section - Three columns: Estimate No (left), Name (center), Date (right)
   doc.setFont("helvetica", "bold");
-  doc.setFontSize(9);
-  doc.setTextColor(100, 100, 100);
+  doc.setFontSize(10);
+  doc.setTextColor(50, 50, 50);
 
   // Left: Estimate No
   doc.text("Estimate No:", 18, 32);
@@ -1261,7 +1409,7 @@ function regenerateInvoice(invoiceId) {
 
   // Center: Customer Name
   doc.setFont("helvetica", "bold");
-  doc.setTextColor(100, 100, 100);
+  doc.setTextColor(50, 50, 50);
   doc.text("Customer Name:", 105, 32, { align: "center" });
   doc.setFont("helvetica", "normal");
   doc.setTextColor(0, 0, 0);
@@ -1269,7 +1417,7 @@ function regenerateInvoice(invoiceId) {
 
   // Right: Date
   doc.setFont("helvetica", "bold");
-  doc.setTextColor(100, 100, 100);
+  doc.setTextColor(50, 50, 50);
   doc.text("Date:", 192, 32, { align: "right" });
   doc.setFont("helvetica", "normal");
   doc.setTextColor(0, 0, 0);
@@ -1298,10 +1446,11 @@ function regenerateInvoice(invoiceId) {
       halign: "center",
     },
     styles: {
-      fontSize: 9,
+      fontSize: 10,
       font: "helvetica",
       fontStyle: "normal",
       cellPadding: 3,
+      textColor: [50, 50, 50],
     },
     columnStyles: {
       0: { cellWidth: 16, halign: "center" },
