@@ -46,7 +46,7 @@
               type="text"
               class="form-control"
               id="customerName"
-              placeholder="Enter customer name"
+              style="text-transform: uppercase;"
               required
             />
           </div>
@@ -70,6 +70,7 @@
                 type="text"
                 class="form-control"
                 id="itemDescription"
+                style="text-transform: uppercase;"
                 required
               />
             </div>
@@ -124,16 +125,16 @@
             <span>Add Item</span>
           </button>
           <!-- ***DEVELOPMENT FEATURE*** -->
-          <!--
-          <button
+          
+          <!-- <button
             type="button"
             class="btn btn-warning btn-sm ms-2"
             onclick="addTestItems()"
             title="DEV: Add 20 test items"
           >
             🧪 Add 20 Rows (Test)
-          </button>
-          -->
+          </button> -->
+         
         </form>
       </div>
 
@@ -148,6 +149,7 @@
                 <th>Item Description</th>
                 <th>Quantity</th>
                 <th>MRP (₹)</th>
+                <th class="discount-column-header" style="display:none;">Discount (%)</th>
                 <th>Net (₹)</th>
                 <th>Total (₹)</th>
                 <th>Action</th>
@@ -155,7 +157,7 @@
             </thead>
             <tbody id="itemsTableBody">
               <tr>
-                <td colspan="7" class="text-center text-muted">
+                <td colspan="8" class="text-center text-muted">
                   No items added yet
                 </td>
               </tr>
