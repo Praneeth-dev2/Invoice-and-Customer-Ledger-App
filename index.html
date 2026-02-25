@@ -34,6 +34,19 @@
       <div class="header">
         <h1>📄 Invoice Generator</h1>
         <p class="text-muted mb-0">Generate professional invoices instantly</p>
+        
+        <!-- Mode Toggle -->
+        <div class="mode-toggle-container">
+          <button class="mode-toggle-btn active" id="modeNowBtn" onclick="setInvoiceMode('now')">
+            ⚡ Invoice Now
+          </button>
+          <button class="mode-toggle-btn" id="modeLaterBtn" onclick="setInvoiceMode('later')">
+            🕒 Invoice for Later
+          </button>
+        </div>
+        <p class="mode-description" id="modeDescription">
+          Complete all fields and generate invoice immediately
+        </p>
       </div>
 
       <!-- Customer Name Field -->
@@ -181,10 +194,10 @@
         <button
           class="btn btn-lg btn-action"
           id="generateBtn"
-          onclick="generateInvoice()"
+          onclick="handleMainAction()"
           style="background-color: #606c38; border-color: #606c38; color: white"
         >
-          📄 Generate Invoice
+          <span id="mainActionText">📄 Generate Invoice</span>
         </button>
 
         <button
@@ -312,6 +325,49 @@
             onclick="clearAllInvoices()"
           >
             🗑️ Clear All Saved Invoices
+          </button>
+        </div>
+      </div>
+
+      <!-- Pending Invoices Section -->
+      <div class="saved-invoices-section pending-section">
+        <div class="invoices-header">
+          <h4>🕒 Pending Invoices</h4>
+          <button
+            class="btn btn-sm"
+            onclick="togglePendingSortOrder()"
+            id="pendingSortBtn"
+            style="
+              background-color: #dda15e;
+              border-color: #dda15e;
+              color: white;
+            "
+          >
+            <ion-icon name="swap-vertical-outline"></ion-icon>
+            <span id="pendingSortText">Newest First</span>
+          </button>
+        </div>
+        <div class="search-box">
+          <input
+            type="text"
+            class="form-control"
+            id="pendingInvoiceSearch"
+            placeholder="Search pending invoices..."
+            onkeyup="searchPendingInvoices()"
+          />
+        </div>
+
+        <div id="pendingInvoicesList">
+          <div class="no-invoices">
+            No pending invoices found.
+          </div>
+        </div>
+        <div class="text-center mt-3">
+          <button
+            class="btn btn-outline-danger btn-sm"
+            onclick="clearAllPendingInvoices()"
+          >
+            🗑️ Clear All Pending Invoices
           </button>
         </div>
       </div>
