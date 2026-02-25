@@ -708,3 +708,86 @@ input[readonly] {
   cursor: not-allowed;
   opacity: 0.8;
 }
+
+/* Mode Toggle Styles */
+.mode-toggle-container {
+  display: flex;
+  gap: 10px;
+  justify-content: center;
+  margin-top: 20px;
+  flex-wrap: wrap;
+}
+
+.mode-toggle-btn {
+  padding: 10px 20px;
+  border: 2px solid #bc6c25;
+  background-color: white;
+  color: #bc6c25;
+  border-radius: 8px;
+  font-weight: bold;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  font-size: 14px;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.mode-toggle-btn:hover {
+  background-color: #f5ebe0;
+  transform: translateY(-2px);
+}
+
+.mode-toggle-btn.active {
+  background-color: #bc6c25;
+  color: white;
+  box-shadow: 0 4px 8px rgba(188, 108, 37, 0.3);
+}
+
+.mode-description {
+  text-align: center;
+  margin-top: 10px;
+  font-size: 13px;
+  color: #6c757d;
+  font-style: italic;
+}
+
+/* Pending Invoices Section */
+.pending-section {
+  margin-top: 30px;
+  padding-top: 30px;
+  border-top: 3px solid #dda15e;
+}
+
+.pending-section .invoices-header h4 {
+  color: #dda15e;
+}
+
+.pending-item {
+  border-left: 4px solid #dda15e;
+}
+
+.pending-item:hover {
+  background-color: #fff8f0;
+  border-left-color: #bc6c25;
+}
+
+/* Responsive Mode Toggle */
+@media (max-width: 768px) {
+  .mode-toggle-container {
+    flex-direction: column;
+  }
+  
+  .mode-toggle-btn {
+    width: 100%;
+    justify-content: center;
+  }
+}
+
+/* Additional spacing for pending section on mobile */
+@media (max-width: 480px) {
+  .pending-section {
+    margin-top: 20px;
+    padding-top: 20px;
+  }
+}
