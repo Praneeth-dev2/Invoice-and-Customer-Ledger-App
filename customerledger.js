@@ -713,8 +713,8 @@ function exportCustomerPDF() {
 
   // Customer Info Section
   doc.setFont("helvetica", "normal");
-  doc.setFontSize(9);
-  doc.setTextColor(100, 100, 100);
+  doc.setFontSize(10);
+  doc.setTextColor(50, 50, 50);
 
   // Customer Name (left)
   doc.text("Customer: " + customer.name, 15, 32);
@@ -808,10 +808,11 @@ function exportCustomerPDF() {
       fontStyle: "bold",
     },
     styles: {
-      fontSize: 9,
+      fontSize: 10,
       font: "helvetica",
       fontStyle: "normal",
       cellPadding: 3,
+      textColor: [50, 50, 50],
     },
     columnStyles: {
       0: { cellWidth: 30, halign: "center" },
@@ -1267,8 +1268,8 @@ function viewStatementByDateRange() {
 
   // Customer Info Section
   doc.setFont("helvetica", "normal");
-  doc.setFontSize(9);
-  doc.setTextColor(100, 100, 100);
+  doc.setFontSize(10);
+  doc.setTextColor(50, 50, 50);
 
   // Customer Name (left)
   doc.text("Customer: " + customer.name, 15, 32);
@@ -1312,8 +1313,8 @@ function viewStatementByDateRange() {
     closingBalance >= 0 ? "(Customer Owes)" : "(Advance Paid)";
 
   doc.setFont("helvetica", "bold");
-  doc.setFontSize(9);
-  doc.setTextColor(100, 100, 100);
+  doc.setFontSize(10);
+  doc.setTextColor(50, 50, 50);
   doc.text(
     "Opening Balance: Rs. " + Math.abs(openingBalance).toFixed(2),
     15,
@@ -1392,10 +1393,11 @@ function viewStatementByDateRange() {
       fontStyle: "bold",
     },
     styles: {
-      fontSize: 9,
+      fontSize: 10,
       font: "helvetica",
       fontStyle: "normal",
       cellPadding: 3,
+      textColor: [50, 50, 50],
     },
     columnStyles: {
       0: { cellWidth: 30, halign: "center" },
@@ -1467,8 +1469,8 @@ function printLedger() {
 
   // Customer Info Section
   doc.setFont("helvetica", "normal");
-  doc.setFontSize(9);
-  doc.setTextColor(100, 100, 100);
+  doc.setFontSize(10);
+  doc.setTextColor(50, 50, 50);
 
   // Customer Name (left)
   doc.text("Customer: " + customer.name, 15, 32);
@@ -1562,10 +1564,11 @@ function printLedger() {
       fontStyle: "bold",
     },
     styles: {
-      fontSize: 9,
+      fontSize: 10,
       font: "helvetica",
       fontStyle: "normal",
       cellPadding: 3,
+      textColor: [50, 50, 50],
     },
     columnStyles: {
       0: { cellWidth: 30, halign: "center" },
