@@ -777,11 +777,13 @@ function generateInvoice() {
       return;
     }
     
-    // Check MRP
-    const mrp = parseFloat(item.mrp);
-    if (isNaN(mrp) || mrp <= 0) {
-      alert(`Item ${i + 1} (${item.description}): MRP must be greater than 0!`);
-      return;
+    // Check MRP only if net was not manually entered
+    if (!item.manualNet) {
+      const mrp = parseFloat(item.mrp);
+      if (isNaN(mrp) || mrp <= 0) {
+        alert(`Item ${i + 1} (${item.description}): MRP must be greater than 0!`);
+        return;
+      }
     }
     
     // Check Net
@@ -853,7 +855,7 @@ function generateInvoice() {
     item.sno,
     item.description.toUpperCase(),
     item.quantity,
-    "Rs. " + item.mrp,
+    item.manualNet ? "-" : "Rs. " + item.mrp, // Show "-" for manual net items
     "Rs. " + item.net,
     "Rs. " + item.total,
   ]);
@@ -1155,10 +1157,12 @@ function areAllItemsValid() {
       return false;
     }
     
-    // Check MRP
-    const mrp = parseFloat(item.mrp);
-    if (isNaN(mrp) || mrp <= 0) {
-      return false;
+    // Check MRP only if net was not manually entered
+    if (!item.manualNet) {
+      const mrp = parseFloat(item.mrp);
+      if (isNaN(mrp) || mrp <= 0) {
+        return false;
+      }
     }
     
     // Check Net
