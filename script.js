@@ -99,7 +99,8 @@ document.getElementById("itemForm").addEventListener("submit", function (e) {
       alert("Please enter a valid quantity!");
       return;
     }
-    if (mrp <= 0) {
+    // Only validate MRP if net is not manually entered
+    if (netRateInput.dataset.autoCalculated !== "false" && mrp <= 0) {
       alert("Please enter a valid MRP!");
       return;
     }
@@ -128,7 +129,7 @@ document.getElementById("itemForm").addEventListener("submit", function (e) {
     sno: itemCounter++,
     description: description,
     quantity: quantity,
-    mrp: mrp.toFixed(2),
+    mrp: isManualNet ? 0 : mrp.toFixed(2), // Store 0 if manual net, otherwise MRP value
     discount: isManualNet ? 0 : discount, // Store 0 if manual net, otherwise discount value
     net: netAmount.toFixed(2),
     total: total.toFixed(2),
@@ -168,12 +169,15 @@ document.getElementById("mrp").addEventListener("input", function () {
   const mrp = parseFloat(this.value) || 0;
   const discount = parseFloat(document.getElementById("discount").value) || 0;
   const netRateInput = document.getElementById("netRate");
+  const mrpInput = document.getElementById("mrp");
   
-  // Only auto-calculate if net rate is empty or user hasn't manually entered it
-  if (netRateInput.value === "" || netRateInput.dataset.autoCalculated === "true") {
+  // When MRP is entered, always recalculate (override manual net if it was manual)
+  if (this.value !== "") {
     const netAmount = mrp - (mrp * discount / 100);
     netRateInput.value = netAmount >= 0 ? netAmount.toFixed(2) : "0.00";
     netRateInput.dataset.autoCalculated = "true";
+    // Make MRP required again when using MRP-based calculation
+    mrpInput.required = true;
   }
 });
 
@@ -181,21 +185,25 @@ document.getElementById("discount").addEventListener("input", function () {
   const mrp = parseFloat(document.getElementById("mrp").value) || 0;
   const discount = parseFloat(this.value) || 0;
   const netRateInput = document.getElementById("netRate");
+  const mrpInput = document.getElementById("mrp");
   
-  // Only auto-calculate if net rate hasn't been manually overridden
-  if (netRateInput.value === "" || netRateInput.dataset.autoCalculated === "true") {
-    const netAmount = mrp - (mrp * discount / 100);
-    netRateInput.value = netAmount >= 0 ? netAmount.toFixed(2) : "0.00";
-    netRateInput.dataset.autoCalculated = "true";
-  }
+  // Always recalculate net based on current discount value (including when cleared)
+  const netAmount = mrp - (mrp * discount / 100);
+  netRateInput.value = netAmount >= 0 ? netAmount.toFixed(2) : "0.00";
+  netRateInput.dataset.autoCalculated = "true";
+  // Make MRP required again when using discount-based calculation
+  mrpInput.required = true;
 });
 
 // Mark net rate as manually entered when user types in it
 document.getElementById("netRate").addEventListener("input", function () {
   if (this.value !== "") {
     this.dataset.autoCalculated = "false"; // User manually entered net
-    // Clear the discount field when net is manually entered
+    // Clear both MRP and discount fields when net is manually entered
+    document.getElementById("mrp").value = "";
     document.getElementById("discount").value = "";
+    // Remove required attribute from MRP when net is manually entered
+    document.getElementById("mrp").required = false;
   }
 });
 
@@ -203,6 +211,8 @@ document.getElementById("netRate").addEventListener("input", function () {
 document.getElementById("netRate").addEventListener("change", function () {
   if (this.value === "") {
     this.dataset.autoCalculated = "true"; // Allow auto-calculation again
+    // Make MRP required again when net is cleared
+    document.getElementById("mrp").required = true;
   }
 });
 
@@ -352,7 +362,7 @@ function updateTable() {
       (item) => {
         // In "later" mode, show "-" for zero/empty values
         const displayQuantity = (invoiceMode === 'later' && (item.quantity === 0 || item.quantity === '0.00')) ? '-' : item.quantity;
-        const displayMrp = (invoiceMode === 'later' && (parseFloat(item.mrp) === 0)) ? '-' : `₹${item.mrp}`;
+        const displayMrp = item.manualNet ? '-' : ((invoiceMode === 'later' && (parseFloat(item.mrp) === 0)) ? '-' : `₹${item.mrp}`);
         const displayNet = (invoiceMode === 'later' && (parseFloat(item.net) === 0)) ? '-' : `₹${item.net}`;
         const displayTotal = (invoiceMode === 'later' && (parseFloat(item.total) === 0)) ? '-' : `₹${item.total}`;
         
@@ -364,7 +374,7 @@ function updateTable() {
               <td>${item.sno}</td>
               <td class="editable-cell" data-field="description">
                   <span class="view-mode">${item.description || '-'}</span>
-                  <input type="text" class="edit-mode form-control form-control-sm" value="${item.description}" style="display:none;">
+                  <textarea class="edit-mode form-control form-control-sm" style="display:none; resize: vertical; min-height: 38px; overflow: hidden;">${item.description}</textarea>
               </td>
               <td class="editable-cell" data-field="quantity">
                   <span class="view-mode">${displayQuantity}</span>
@@ -372,7 +382,7 @@ function updateTable() {
               </td>
               <td class="editable-cell" data-field="mrp">
                   <span class="view-mode">${displayMrp}</span>
-                  <input type="number" class="edit-mode form-control form-control-sm" value="${item.mrp}" min="0" step="0.01" style="display:none;">
+                  <input type="number" class="edit-mode form-control form-control-sm" value="${item.manualNet ? '' : item.mrp}" min="0" step="0.01" ${item.manualNet ? 'placeholder="-"' : ''} style="display:none;">
               </td>
               <td class="discount-column editable-cell" data-field="discount" style="display:none;">
                   <span class="view-mode-discount" style="display:none;">${displayDiscount}</span>
@@ -423,10 +433,22 @@ function editItem(sno) {
   viewDiscountSpans.forEach((span) => (span.style.display = "none"));
   editInputs.forEach((input) => {
     input.style.display = "block";
+    input.style.boxSizing = "border-box"; // Include padding in width calculation
+    input.style.maxWidth = "100%"; // Don't exceed cell width
     // Give description input more width, others get 80px
     const cell = input.closest('.editable-cell');
     if (cell && cell.dataset.field === 'description') {
-      input.style.width = "200px";
+      input.style.width = "100%"; // Use full cell width for description
+      // Auto-resize textarea height based on content
+      if (input.tagName === 'TEXTAREA') {
+        input.style.height = 'auto';
+        input.style.height = input.scrollHeight + 'px';
+        // Add input event listener to auto-resize as user types
+        input.addEventListener('input', function() {
+          this.style.height = 'auto';
+          this.style.height = this.scrollHeight + 'px';
+        });
+      }
     } else {
       input.style.width = "80px";
     }
@@ -458,14 +480,22 @@ function editItem(sno) {
   // Ensure they're visible and styled
   newMrpInput.style.display = "block";
   newMrpInput.style.width = "80px";
+  newMrpInput.style.boxSizing = "border-box";
+  newMrpInput.style.maxWidth = "100%";
   newDiscountInput.style.display = "block";
   newDiscountInput.style.width = "80px";
+  newDiscountInput.style.boxSizing = "border-box";
+  newDiscountInput.style.maxWidth = "100%";
   newNetInput.style.display = "block";
   newNetInput.style.width = "80px";
+  newNetInput.style.boxSizing = "border-box";
+  newNetInput.style.maxWidth = "100%";
   newNetInput.readOnly = false; // Make net editable for manual entry
   newNetInput.style.backgroundColor = "#ffffff"; // White background for editable field
   newQuantityInput.style.display = "block";
   newQuantityInput.style.width = "80px";
+  newQuantityInput.style.boxSizing = "border-box";
+  newQuantityInput.style.maxWidth = "100%";
   
   mrpInput.replaceWith(newMrpInput);
   discountInput.replaceWith(newDiscountInput);
@@ -497,40 +527,55 @@ function editItem(sno) {
   };
 
   // Add event listeners to the new elements
-  newMrpInput.addEventListener('input', recalculateNet);
+  // When MRP is changed, always recalculate net (override manual net if it was manual)
+  newMrpInput.addEventListener('input', () => {
+    const mrp = parseFloat(newMrpInput.value) || 0;
+    const discount = parseFloat(newDiscountInput.value) || 0;
+    
+    // If MRP is entered or changed, recalculate net
+    if (newMrpInput.value !== "") {
+      // Save the original manual net before overriding (only if it was manual and this is first time)
+      if (newNetInput.dataset.autoCalculated === "false" && !newNetInput.dataset.originalManualNet) {
+        newNetInput.dataset.originalManualNet = newNetInput.value;
+      }
+      const net = mrp - (mrp * discount / 100);
+      newNetInput.value = net.toFixed(2);
+      newNetInput.dataset.autoCalculated = "true";
+    } else {
+      // If MRP is cleared, restore original manual net if it existed
+      if (newNetInput.dataset.originalManualNet) {
+        newNetInput.value = newNetInput.dataset.originalManualNet;
+        newNetInput.dataset.autoCalculated = "false";
+        delete newNetInput.dataset.originalManualNet;
+      }
+    }
+    recalculateTotal();
+  });
   
   // When discount is changed, always recalculate net (override manual net)
   newDiscountInput.addEventListener('input', () => {
     const mrp = parseFloat(newMrpInput.value) || 0;
     const discount = parseFloat(newDiscountInput.value) || 0;
     
-    // If discount is entered, recalculate net (even if it was manually entered before)
-    if (newDiscountInput.value !== "") {
-      // Save the original manual net before overriding (only if it was manual)
-      if (newNetInput.dataset.autoCalculated === "false" && !newNetInput.dataset.originalManualNet) {
-        newNetInput.dataset.originalManualNet = newNetInput.value;
-      }
-      const net = mrp - (mrp * discount / 100);
-      newNetInput.value = net.toFixed(2);
-      newNetInput.dataset.autoCalculated = "true"; // Switch back to auto-calculation mode
-    } else {
-      // If discount is cleared, restore original manual net if it existed
-      if (newNetInput.dataset.originalManualNet) {
-        newNetInput.value = newNetInput.dataset.originalManualNet;
-        newNetInput.dataset.autoCalculated = "false";
-        delete newNetInput.dataset.originalManualNet; // Clear the saved value
-      }
+    // Always recalculate net based on current MRP and discount (including when discount is cleared to 0)
+    // Save the original manual net before overriding (only if it was manual and this is first time)
+    if (newNetInput.dataset.autoCalculated === "false" && !newNetInput.dataset.originalManualNet) {
+      newNetInput.dataset.originalManualNet = newNetInput.value;
     }
+    const net = mrp - (mrp * discount / 100);
+    newNetInput.value = net.toFixed(2);
+    newNetInput.dataset.autoCalculated = "true"; // Switch back to auto-calculation mode
     recalculateTotal();
   });
   
   newQuantityInput.addEventListener('input', recalculateTotal);
   
-  // When net is manually changed, mark it as manual, clear discount, and recalculate total
+  // When net is manually changed, mark it as manual, clear discount and MRP, and recalculate total
   newNetInput.addEventListener('input', () => {
     if (newNetInput.value !== "") {
       newNetInput.dataset.autoCalculated = "false";
-      // Clear discount when net is manually entered
+      // Clear both MRP and discount when net is manually entered
+      newMrpInput.value = "";
       newDiscountInput.value = "";
     }
     recalculateTotal();
@@ -580,7 +625,8 @@ function saveItem(sno) {
       return;
     }
 
-    if (isNaN(mrp) || mrp < 0) {
+    // Only validate MRP if net is not manually entered
+    if (!isManualNet && (isNaN(mrp) || mrp < 0)) {
       alert("Invalid MRP!");
       return;
     }
@@ -608,7 +654,7 @@ function saveItem(sno) {
   // Update item with new values
   item.description = description;
   item.quantity = quantity;
-  item.mrp = mrp.toFixed(2);
+  item.mrp = isManualNet ? 0 : mrp.toFixed(2); // Set MRP to 0 if net was manually entered
   item.discount = isManualNet ? 0 : discount; // Set discount to 0 if net was manually entered
   item.net = net.toFixed(2);
   item.total = (quantity * net).toFixed(2);
