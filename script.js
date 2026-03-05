@@ -1681,17 +1681,16 @@ function openInvoicePDF(invoiceId) {
       justify-content: center;
       align-items: center;
       z-index: 10000;
-      overflow: auto;
-      padding: 20px;
+      overflow: hidden;
+      padding: 10px;
     `;
 
     const modalContent = document.createElement('div');
     modalContent.style.cssText = `
       background: white;
       border-radius: 15px;
-      max-width: 900px;
-      width: 95%;
-      height: 85vh;
+      width: min(900px, 95vw);
+      height: min(85vh, calc(100vh - 20px));
       overflow: hidden;
       box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
       position: relative;
@@ -1699,22 +1698,31 @@ function openInvoicePDF(invoiceId) {
       flex-direction: column;
     `;
 
+    // Detect if mobile device
+    const isMobile = window.innerWidth <= 768;
+    const isVerySmall = window.innerWidth <= 480;
+    
+    // Calculate responsive font size for filename
+    const filenameFontSize = isVerySmall ? '12px' : (isMobile ? '14px' : '20px');
+    const buttonPadding = isVerySmall ? '8px 12px' : (isMobile ? '10px 16px' : '10px 24px');
+    const buttonFontSize = isVerySmall ? '12px' : (isMobile ? '13px' : '15px');
+    
     modalContent.innerHTML = `
-      <div style="background: linear-gradient(135deg, #dda15e, #bc6c25); padding: 20px 30px; display: flex; justify-content: space-between; align-items: center;">
-        <h2 style="color: white; margin: 0; font-size: 24px; font-weight: 600;">📄 ${invoice.filename}</h2>
-        <div style="display: flex; gap: 10px;">
-          <button id="downloadPDFBtn" style="padding: 10px 24px; background: white; color: #bc6c25; border: none; border-radius: 8px; cursor: pointer; font-size: 15px; font-weight: 600; box-shadow: 0 4px 6px rgba(0,0,0,0.1); transition: all 0.3s ease; display: flex; align-items: center; gap: 8px;">
-            <ion-icon name="download-outline" style="font-size: 20px;"></ion-icon>
-            Download
+      <div style="background: linear-gradient(135deg, #dda15e, #bc6c25); padding: ${isMobile ? '12px 15px' : '20px 30px'}; display: flex; ${isMobile ? 'flex-direction: column;' : 'justify-content: space-between;'} align-items: ${isMobile ? 'stretch' : 'center'}; gap: ${isMobile ? '12px' : '10px'};">
+        <h2 style="color: white; margin: 0; font-size: ${filenameFontSize}; font-weight: 600; word-break: break-word; ${isMobile ? 'text-align: center;' : 'flex: 1; min-width: 0;'} line-height: 1.3;">📄 ${invoice.filename}</h2>
+        <div style="display: flex; ${isMobile ? 'flex-direction: column;' : 'flex-direction: row;'} gap: ${isMobile ? '8px' : '10px'}; ${isMobile ? 'width: 100%;' : 'flex-shrink: 0;'}">
+          <button id="downloadPDFBtn" style="padding: ${buttonPadding}; background: white; color: #bc6c25; border: none; border-radius: 8px; cursor: pointer; font-size: ${buttonFontSize}; font-weight: 600; box-shadow: 0 4px 6px rgba(0,0,0,0.1); transition: all 0.3s ease; display: flex; align-items: center; justify-content: center; gap: 6px; white-space: nowrap; ${isMobile ? 'width: 100%;' : ''}">
+            <ion-icon name="download-outline" style="font-size: ${isVerySmall ? '16px' : '18px'};"></ion-icon>
+            ${isMobile ? 'Download' : 'Download'}
           </button>
-          <button id="closeSavedPDFModalBtn" style="padding: 10px 20px; background: rgba(255,255,255,0.2); color: white; border: 2px solid white; border-radius: 8px; cursor: pointer; font-size: 15px; font-weight: 600; transition: all 0.3s ease;">
+          <button id="closeSavedPDFModalBtn" style="padding: ${buttonPadding}; background: rgba(255,255,255,0.2); color: white; border: 2px solid white; border-radius: 8px; cursor: pointer; font-size: ${buttonFontSize}; font-weight: 600; transition: all 0.3s ease; white-space: nowrap; ${isMobile ? 'width: 100%;' : ''}">
             Close
           </button>
         </div>
       </div>
       
-      <div style="flex: 1; overflow: hidden; background: #525252;">
-        <iframe src="${blobUrl}" style="width: 100%; height: 100%; border: none;"></iframe>
+      <div style="flex: 1; overflow: hidden; background: #525252; min-height: 0;">
+        <iframe src="${blobUrl}" style="width: 100%; height: 100%; border: none; display: block;"></iframe>
       </div>
     `;
 
@@ -2763,23 +2771,30 @@ function viewPendingInvoice(id) {
     justify-content: center;
     align-items: center;
     z-index: 10000;
-    overflow: auto;
-    padding: 20px;
+    overflow: hidden;
+    padding: 10px;
   `;
 
   const modalContent = document.createElement('div');
   modalContent.style.cssText = `
     background: white;
     border-radius: 15px;
-    max-width: 900px;
-    width: 100%;
-    max-height: 90vh;
+    width: min(900px, 95vw);
+    height: min(85vh, calc(100vh - 20px));
     overflow: hidden;
     box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
     position: relative;
     display: flex;
     flex-direction: column;
   `;
+
+  // Detect if mobile device
+  const isMobile = window.innerWidth <= 768;
+  const isVerySmall = window.innerWidth <= 480;
+  
+  // Calculate responsive font sizes
+  const headerFontSize = isVerySmall ? '16px' : (isMobile ? '18px' : '26px');
+  const headerPadding = isVerySmall ? '12px 15px' : (isMobile ? '15px 20px' : '25px 30px');
 
   // Build items table HTML
   let itemsTableHtml = '';
@@ -2790,15 +2805,17 @@ function viewPendingInvoice(id) {
       const displayNet = (parseFloat(item.net) === 0) ? '-' : `₹${parseFloat(item.net).toFixed(2)}`;
       const displayTotal = (parseFloat(item.total) === 0) ? '-' : `₹${parseFloat(item.total).toFixed(2)}`;
       const bgColor = index % 2 === 0 ? '#fefefe' : '#f9f9f9';
+      const cellPadding = isMobile ? '10px 8px' : '12px';
+      const fontSize = isMobile ? '12px' : '14px';
       
       itemsTableHtml += `
         <tr style="background-color: ${bgColor};">
-          <td style="padding: 12px; border-bottom: 1px solid #e0e0e0; text-align: center; font-weight: 500;">${item.sno}</td>
-          <td style="padding: 12px; border-bottom: 1px solid #e0e0e0; font-weight: 500; color: #333;">${item.description || '-'}</td>
-          <td style="padding: 12px; border-bottom: 1px solid #e0e0e0; text-align: center;">${displayQty}</td>
-          <td style="padding: 12px; border-bottom: 1px solid #e0e0e0; text-align: right;">${displayMrp}</td>
-          <td style="padding: 12px; border-bottom: 1px solid #e0e0e0; text-align: right;">${displayNet}</td>
-          <td style="padding: 12px; border-bottom: 1px solid #e0e0e0; text-align: right; font-weight: 600; color: #606c38;">${displayTotal}</td>
+          <td style="padding: ${cellPadding}; border-bottom: 1px solid #e0e0e0; text-align: center; font-weight: 500; font-size: ${fontSize};">${item.sno}</td>
+          <td style="padding: ${cellPadding}; border-bottom: 1px solid #e0e0e0; font-weight: 500; color: #333; font-size: ${fontSize};">${item.description || '-'}</td>
+          <td style="padding: ${cellPadding}; border-bottom: 1px solid #e0e0e0; text-align: center; font-size: ${fontSize};">${displayQty}</td>
+          <td style="padding: ${cellPadding}; border-bottom: 1px solid #e0e0e0; text-align: right; font-size: ${fontSize};">${displayMrp}</td>
+          <td style="padding: ${cellPadding}; border-bottom: 1px solid #e0e0e0; text-align: right; font-size: ${fontSize};">${displayNet}</td>
+          <td style="padding: ${cellPadding}; border-bottom: 1px solid #e0e0e0; text-align: right; font-weight: 600; color: #606c38; font-size: ${fontSize};">${displayTotal}</td>
         </tr>
       `;
     });
@@ -2811,53 +2828,53 @@ function viewPendingInvoice(id) {
   }
 
   modalContent.innerHTML = `
-    <div style="background: linear-gradient(135deg, #dda15e, #bc6c25); padding: 25px 30px; text-align: center;">
-      <h2 style="color: white; margin: 0; font-size: 26px; font-weight: 600;">📋 Pending Invoice Details</h2>
+    <div style="background: linear-gradient(135deg, #dda15e, #bc6c25); padding: ${headerPadding}; text-align: center;">
+      <h2 style="color: white; margin: 0; font-size: ${headerFontSize}; font-weight: 600; line-height: 1.3;">📋 Pending Invoice Details</h2>
     </div>
     
-    <div style="flex: 1; overflow-y: auto; padding: 30px;">
-      <div style="background: linear-gradient(135deg, #f5ebe0, #fdf8f3); padding: 20px; border-radius: 12px; margin-bottom: 25px; border-left: 4px solid #dda15e; box-shadow: 0 2px 8px rgba(0,0,0,0.05);">
-        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px;">
+    <div style="flex: 1; overflow-y: auto; padding: ${isMobile ? '15px' : '30px'}; min-height: 0;">
+      <div style="background: linear-gradient(135deg, #f5ebe0, #fdf8f3); padding: ${isMobile ? '15px' : '20px'}; border-radius: 12px; margin-bottom: ${isMobile ? '15px' : '25px'}; border-left: 4px solid #dda15e; box-shadow: 0 2px 8px rgba(0,0,0,0.05);">
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(${isMobile ? '150px' : '200px'}, 1fr)); gap: ${isMobile ? '8px' : '12px'};">
           <div style="padding: 8px 0;">
-            <div style="font-size: 11px; text-transform: uppercase; color: #999; font-weight: 600; letter-spacing: 0.5px; margin-bottom: 4px;">Filename</div>
-            <div style="font-size: 15px; font-weight: 600; color: #333;">${invoice.filename || invoice.displayName || "Unnamed"}</div>
+            <div style="font-size: ${isMobile ? '10px' : '11px'}; text-transform: uppercase; color: #999; font-weight: 600; letter-spacing: 0.5px; margin-bottom: 4px;">Filename</div>
+            <div style="font-size: ${isMobile ? '13px' : '15px'}; font-weight: 600; color: #333; word-break: break-word;">${invoice.filename || invoice.displayName || "Unnamed"}</div>
           </div>
           <div style="padding: 8px 0;">
-            <div style="font-size: 11px; text-transform: uppercase; color: #999; font-weight: 600; letter-spacing: 0.5px; margin-bottom: 4px;">Customer</div>
-            <div style="font-size: 15px; font-weight: 600; color: #333;">${invoice.customerName || "Not specified"}</div>
+            <div style="font-size: ${isMobile ? '10px' : '11px'}; text-transform: uppercase; color: #999; font-weight: 600; letter-spacing: 0.5px; margin-bottom: 4px;">Customer</div>
+            <div style="font-size: ${isMobile ? '13px' : '15px'}; font-weight: 600; color: #333; word-break: break-word;">${invoice.customerName || "Not specified"}</div>
           </div>
           <div style="padding: 8px 0;">
-            <div style="font-size: 11px; text-transform: uppercase; color: #999; font-weight: 600; letter-spacing: 0.5px; margin-bottom: 4px;">Date</div>
-            <div style="font-size: 15px; font-weight: 600; color: #333;">${invoice.date}</div>
+            <div style="font-size: ${isMobile ? '10px' : '11px'}; text-transform: uppercase; color: #999; font-weight: 600; letter-spacing: 0.5px; margin-bottom: 4px;">Date</div>
+            <div style="font-size: ${isMobile ? '13px' : '15px'}; font-weight: 600; color: #333;">${invoice.date}</div>
           </div>
           <div style="padding: 8px 0;">
-            <div style="font-size: 11px; text-transform: uppercase; color: #999; font-weight: 600; letter-spacing: 0.5px; margin-bottom: 4px;">Saved At</div>
-            <div style="font-size: 15px; font-weight: 600; color: #333;">${invoice.savedAt}</div>
+            <div style="font-size: ${isMobile ? '10px' : '11px'}; text-transform: uppercase; color: #999; font-weight: 600; letter-spacing: 0.5px; margin-bottom: 4px;">Saved At</div>
+            <div style="font-size: ${isMobile ? '13px' : '15px'}; font-weight: 600; color: #333;">${invoice.savedAt}</div>
           </div>
           <div style="padding: 8px 0;">
-            <div style="font-size: 11px; text-transform: uppercase; color: #999; font-weight: 600; letter-spacing: 0.5px; margin-bottom: 4px;">Total Amount</div>
-            <div style="font-size: 18px; font-weight: 700; color: #606c38;">₹${invoice.totalAmount}</div>
+            <div style="font-size: ${isMobile ? '10px' : '11px'}; text-transform: uppercase; color: #999; font-weight: 600; letter-spacing: 0.5px; margin-bottom: 4px;">Total Amount</div>
+            <div style="font-size: ${isMobile ? '16px' : '18px'}; font-weight: 700; color: #606c38;">₹${invoice.totalAmount}</div>
           </div>
         </div>
       </div>
       
-      <div style="margin-bottom: 15px;">
-        <h3 style="color: #bc6c25; margin: 0 0 15px 0; font-size: 20px; font-weight: 600; display: flex; align-items: center; gap: 8px;">
-          <span style="background: #dda15e; color: white; width: 32px; height: 32px; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; font-size: 14px; font-weight: 700;">${invoice.itemCount}</span>
+      <div style="margin-bottom: ${isMobile ? '10px' : '15px'};">
+        <h3 style="color: #bc6c25; margin: 0 0 ${isMobile ? '10px' : '15px'} 0; font-size: ${isMobile ? '16px' : '20px'}; font-weight: 600; display: flex; align-items: center; gap: 8px;">
+          <span style="background: #dda15e; color: white; width: ${isMobile ? '28px' : '32px'}; height: ${isMobile ? '28px' : '32px'}; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; font-size: ${isMobile ? '12px' : '14px'}; font-weight: 700;">${invoice.itemCount}</span>
           Items
         </h3>
       </div>
       
-      <div style="overflow-x: auto; border-radius: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.08);">
-        <table style="width: 100%; border-collapse: collapse; background: white;">
+      <div style="overflow-x: auto; border-radius: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.08); -webkit-overflow-scrolling: touch;">
+        <table style="width: 100%; border-collapse: collapse; background: white; min-width: ${isMobile ? '500px' : 'auto'};">
           <thead>
             <tr style="background: linear-gradient(135deg, #606c38, #283618);">
-              <th style="padding: 14px 12px; text-align: center; color: white; font-weight: 600; font-size: 13px; text-transform: uppercase; letter-spacing: 0.5px;">S.No</th>
-              <th style="padding: 14px 12px; text-align: left; color: white; font-weight: 600; font-size: 13px; text-transform: uppercase; letter-spacing: 0.5px;">Item</th>
-              <th style="padding: 14px 12px; text-align: center; color: white; font-weight: 600; font-size: 13px; text-transform: uppercase; letter-spacing: 0.5px;">Qty</th>
-              <th style="padding: 14px 12px; text-align: right; color: white; font-weight: 600; font-size: 13px; text-transform: uppercase; letter-spacing: 0.5px;">MRP</th>
-              <th style="padding: 14px 12px; text-align: right; color: white; font-weight: 600; font-size: 13px; text-transform: uppercase; letter-spacing: 0.5px;">Net</th>
-              <th style="padding: 14px 12px; text-align: right; color: white; font-weight: 600; font-size: 13px; text-transform: uppercase; letter-spacing: 0.5px;">Total</th>
+              <th style="padding: ${isMobile ? '10px 8px' : '14px 12px'}; text-align: center; color: white; font-weight: 600; font-size: ${isMobile ? '11px' : '13px'}; text-transform: uppercase; letter-spacing: 0.5px;">S.No</th>
+              <th style="padding: ${isMobile ? '10px 8px' : '14px 12px'}; text-align: left; color: white; font-weight: 600; font-size: ${isMobile ? '11px' : '13px'}; text-transform: uppercase; letter-spacing: 0.5px;">Item</th>
+              <th style="padding: ${isMobile ? '10px 8px' : '14px 12px'}; text-align: center; color: white; font-weight: 600; font-size: ${isMobile ? '11px' : '13px'}; text-transform: uppercase; letter-spacing: 0.5px;">Qty</th>
+              <th style="padding: ${isMobile ? '10px 8px' : '14px 12px'}; text-align: right; color: white; font-weight: 600; font-size: ${isMobile ? '11px' : '13px'}; text-transform: uppercase; letter-spacing: 0.5px;">MRP</th>
+              <th style="padding: ${isMobile ? '10px 8px' : '14px 12px'}; text-align: right; color: white; font-weight: 600; font-size: ${isMobile ? '11px' : '13px'}; text-transform: uppercase; letter-spacing: 0.5px;">Net</th>
+              <th style="padding: ${isMobile ? '10px 8px' : '14px 12px'}; text-align: right; color: white; font-weight: 600; font-size: ${isMobile ? '11px' : '13px'}; text-transform: uppercase; letter-spacing: 0.5px;">Total</th>
             </tr>
           </thead>
           <tbody>
@@ -2867,8 +2884,8 @@ function viewPendingInvoice(id) {
       </div>
     </div>
     
-    <div style="padding: 20px 30px; background: #f8f9fa; border-top: 1px solid #e0e0e0; text-align: center;">
-      <button id="closePendingModalBtn" style="padding: 12px 40px; background: linear-gradient(135deg, #bc6c25, #9d5a1f); color: white; border: none; border-radius: 8px; cursor: pointer; font-size: 16px; font-weight: 600; box-shadow: 0 4px 6px rgba(0,0,0,0.1); transition: all 0.3s ease;">
+    <div style="padding: ${isMobile ? '15px 20px' : '20px 30px'}; background: #f8f9fa; border-top: 1px solid #e0e0e0; text-align: center; flex-shrink: 0;">
+      <button id="closePendingModalBtn" style="padding: ${isMobile ? '10px 30px' : '12px 40px'}; background: linear-gradient(135deg, #bc6c25, #9d5a1f); color: white; border: none; border-radius: 8px; cursor: pointer; font-size: ${isMobile ? '14px' : '16px'}; font-weight: 600; box-shadow: 0 4px 6px rgba(0,0,0,0.1); transition: all 0.3s ease;">
         Close
       </button>
     </div>
