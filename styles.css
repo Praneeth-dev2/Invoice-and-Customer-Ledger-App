@@ -111,6 +111,39 @@ body {
   background-color: #dda15e;
   color: white;
 }
+/* Table cell wrapping for description column */
+.table td:nth-child(2) {
+  white-space: normal;
+  word-wrap: break-word;
+  word-break: break-word;
+  overflow-wrap: break-word;
+  min-width: 150px;
+  max-width: 300px;
+}
+.table th:nth-child(2) {
+  white-space: normal;
+}
+/* Edit mode input styles - ensure they wrap within cell */
+.editable-cell .edit-mode {
+  white-space: normal;
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+  height: auto;
+  min-height: 38px;
+}
+.editable-cell[data-field="description"] .edit-mode {
+  word-break: break-word;
+  overflow: hidden;
+  resize: vertical;
+  font-family: inherit;
+  line-height: 1.5;
+  padding: 6px 12px;
+}
+.editable-cell[data-field="description"] .view-mode {
+  display: block;
+  word-break: break-word;
+  white-space: normal;
+}
 .action-buttons {
   flex-direction: row;
   display: flex;
