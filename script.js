@@ -1657,7 +1657,7 @@ function openInvoicePDF(invoiceId) {
   }
 
   if (invoice.pdfData) {
-    // Convert data URI to blob for better mobile support
+    // Convert data URI to blob for better display
     const base64 = invoice.pdfData.split(',')[1];
     const binary = atob(base64);
     const array = new Uint8Array(binary.length);
@@ -1667,26 +1667,97 @@ function openInvoicePDF(invoiceId) {
     const blob = new Blob([array], { type: 'application/pdf' });
     const blobUrl = URL.createObjectURL(blob);
     
-    // Open in new tab with filename in title
-    const newWindow = window.open('', '_blank');
-    newWindow.document.write(`
-      <html>
-        <head>
-          <title>${invoice.filename}</title>
-          <style>
-            body { margin: 0; padding: 0; }
-            iframe { width: 100%; height: 100vh; border: none; }
-          </style>
-        </head>
-        <body>
-          <iframe src="${blobUrl}"></iframe>
-        </body>
-      </html>
-    `);
-    newWindow.document.close();
+    // Create modal overlay
+    const modal = document.createElement('div');
+    modal.id = 'savedInvoicePDFModal';
+    modal.style.cssText = `
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.7);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      z-index: 10000;
+      overflow: auto;
+      padding: 20px;
+    `;
+
+    const modalContent = document.createElement('div');
+    modalContent.style.cssText = `
+      background: white;
+      border-radius: 15px;
+      max-width: 900px;
+      width: 95%;
+      height: 85vh;
+      overflow: hidden;
+      box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+      position: relative;
+      display: flex;
+      flex-direction: column;
+    `;
+
+    modalContent.innerHTML = `
+      <div style="background: linear-gradient(135deg, #dda15e, #bc6c25); padding: 20px 30px; display: flex; justify-content: space-between; align-items: center;">
+        <h2 style="color: white; margin: 0; font-size: 24px; font-weight: 600;">📄 ${invoice.filename}</h2>
+        <div style="display: flex; gap: 10px;">
+          <button id="downloadPDFBtn" style="padding: 10px 24px; background: white; color: #bc6c25; border: none; border-radius: 8px; cursor: pointer; font-size: 15px; font-weight: 600; box-shadow: 0 4px 6px rgba(0,0,0,0.1); transition: all 0.3s ease; display: flex; align-items: center; gap: 8px;">
+            <ion-icon name="download-outline" style="font-size: 20px;"></ion-icon>
+            Download
+          </button>
+          <button id="closeSavedPDFModalBtn" style="padding: 10px 20px; background: rgba(255,255,255,0.2); color: white; border: 2px solid white; border-radius: 8px; cursor: pointer; font-size: 15px; font-weight: 600; transition: all 0.3s ease;">
+            Close
+          </button>
+        </div>
+      </div>
+      
+      <div style="flex: 1; overflow: hidden; background: #525252;">
+        <iframe src="${blobUrl}" style="width: 100%; height: 100%; border: none;"></iframe>
+      </div>
+    `;
+
+    modal.appendChild(modalContent);
+    document.body.appendChild(modal);
+
+    // Download button handler
+    const downloadBtn = document.getElementById('downloadPDFBtn');
+    downloadBtn.addEventListener('click', () => {
+      downloadInvoice(invoiceId);
+    });
     
-    // Clean up blob URL after a delay
-    setTimeout(() => URL.revokeObjectURL(blobUrl), 1000);
+    // Add button hover effects
+    downloadBtn.addEventListener('mouseenter', () => {
+      downloadBtn.style.transform = 'translateY(-2px)';
+      downloadBtn.style.boxShadow = '0 6px 12px rgba(0,0,0,0.15)';
+    });
+    downloadBtn.addEventListener('mouseleave', () => {
+      downloadBtn.style.transform = 'translateY(0)';
+      downloadBtn.style.boxShadow = '0 4px 6px rgba(0,0,0,0.1)';
+    });
+
+    // Close button handler
+    const closeBtn = document.getElementById('closeSavedPDFModalBtn');
+    closeBtn.addEventListener('click', () => {
+      URL.revokeObjectURL(blobUrl); // Clean up blob URL
+      closeModal('savedInvoicePDFModal');
+    });
+    
+    closeBtn.addEventListener('mouseenter', () => {
+      closeBtn.style.background = 'rgba(255,255,255,0.3)';
+    });
+    closeBtn.addEventListener('mouseleave', () => {
+      closeBtn.style.background = 'rgba(255,255,255,0.2)';
+    });
+
+    // Close on background click
+    modal.addEventListener('click', function(e) {
+      if (e.target === modal) {
+        URL.revokeObjectURL(blobUrl); // Clean up blob URL
+        closeModal('savedInvoicePDFModal');
+      }
+    });
   } else {
     // Regenerate PDF for older invoices without pdfData
     regenerateAndOpenInvoice(invoiceId);
