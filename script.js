@@ -1722,7 +1722,7 @@ function openInvoicePDF(invoiceId) {
       </div>
       
       <div style="flex: 1; overflow: hidden; background: #525252; min-height: 0;">
-        <iframe src="${blobUrl}" style="width: 100%; height: 100%; border: none; display: block;"></iframe>
+        <embed src="${blobUrl}" type="application/pdf" style="width: 100%; height: 100%; border: none; display: block;">
       </div>
     `;
 
